@@ -99,6 +99,18 @@ x <- filter(x, duration.secs > 300)
 x <- droplevels(x)
 x$treatment <- relevel(x$treatment, ref='control')
 
-# Attrition? TODO: add actual truth table logic here
+# Attrition? TODO: @lauracheng will do this
+# Q12 | Q25 | Finished
+# 0 0 0 -> Missing data (because they didn't get any treatment)
+# 0 0 1 -> Missing data
+# 0 1 0 -> Missing data
+# 0 1 1 -> Missing data
+# 1 0 0 -> Attrition
+# 1 0 1 -> Attrition
+# 1 1 0 -> Complete
+# 1 1 1 -> Complete
+
+
+
 # Save as RData
-save(x, file='data/processed/survey_data_clean_20220410.RData')
+# save(x, file='data/processed/survey_data_clean_20220410.RData')
