@@ -3,7 +3,7 @@ library(tidyverse)
 setwd("C:/dev/mids/w241/project/")
 
 # Clear out the rows with metadata:
-x <- read.csv('data/raw/raw_qualtrics_data_20221322.csv')
+x <- read.csv('data/raw/raw_qualtrics_data_20220410.csv')
 x <- x[-c(1,2),] # remove the first two data lines (they're details of each column)
 
 
@@ -36,11 +36,20 @@ x <- rename(x,
 x <- select(x, -q12_do)
 
 
+# Get time columns:
+x <- rename(x, pretask.time = q14_page.submit, posttask.time = q15_page.submit)
+
+# Remove rest of the timing columns
+x <- select(x, -matches('submit'))
+
 # Set correct data types
 x$finished          <- as.logical(x$finished)
 x$english.native    <- recode(x$english.native, 'Yes'=TRUE, 'No'=FALSE)
 x$accept.disclaimer <- recode(x$accept.disclaimer, 'Yes'=TRUE, 'No'=FALSE, .default=NA)
+
 x <- x %>% mutate(across(c(gender, highest.education, age.demographic), factor))
+x <- x %>% mutate(across(c(location.lat, location.long, duration.secs, progress, pretask.time, posttask.time, random.id), as.numeric))
+
 x$date.start <- as.POSIXct(x$date.start, tz='America/Denver')
 x$date.end <- as.POSIXct(x$date.end, tz='America/Denver')
 
@@ -49,23 +58,11 @@ x$date.end <- as.POSIXct(x$date.end, tz='America/Denver')
 x <- x %>% unite('treatment', starts_with('fl'), remove = F, sep='') 
 x$treatment <- as.factor(x$treatment)
 
-# There are some blank values, TODO: remove them, these are weird failures of the Qualtrics system
+# There are some blank values, removed below
 levels(x$treatment) <- c('', 'control', 'negative', 'neutral', 'positive')
 # Now remove the random flow indicator columns
 x <- select(x, -starts_with('fl'))
 
-
-
-# Filter out invalid data:
-#   * Henceforth use only the completed responses
-x <- filter(x, finished == TRUE)
-# Attrition? TODO: add actual truth table logic here
-
-# Get time columns:
-x <- rename(x, pretask.time = q14_page.submit, posttask.time = q15_page.submit)
-
-# Remove rest of the timing columns
-x <- select(x, -matches('submit'))
 
 
 
@@ -82,3 +79,26 @@ score_answers <- function(answers, recall_list) {
 # These columns are the number of right answers out of the 50 words from the word bank
 x$q12.score <- sapply(x$q12, score_answers, recall_list_1, USE.NAMES = F)
 x$q25.score <- sapply(x$q25, score_answers, recall_list_2, USE.NAMES = F)
+
+
+# Remove the actual answers
+x <- select(x, -q12, -q25)
+
+
+
+# Filter out invalid data:
+# --------------------------------------------------------------------------------------
+#   * Remove the rows that did not accept the disclaimer
+#   * Remove pilot data (< 2022-03-17 07:30:00)
+#   * Remove anything that's less than 5 minutes (300 seconds) long, as this is the length of the treatment
+x <- filter(x, accept.disclaimer == T)
+x <- filter(x, date.start >= '2022-03-17 07:30:00')
+x <- filter(x, duration.secs > 300)
+
+# Recalculate levels for treatment var
+x <- droplevels(x)
+x$treatment <- relevel(x$treatment, ref='control')
+
+# Attrition? TODO: add actual truth table logic here
+# Save as RData
+save(x, file='data/processed/survey_data_clean_20220410.RData')
