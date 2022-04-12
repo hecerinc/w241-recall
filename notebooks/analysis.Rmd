@@ -88,6 +88,21 @@ stargazer(m2.1, m2.2, m2.3, type='text')
 
 ## 3. Covariate (long) model
 
+```{r}
+dd <- tidyr::gather(d, time, score, q12.score:q25.score)
+dd$time <- ifelse(dd$time == 'q12.score', 0, 1)
+dd <- data.table(dd)
+```
+
+```{r}
+m3.1 <- dd[treatment %in% c('control', 'positive'), lm(score ~ time*treatment + highest.education)]
+m3.2 <- dd[treatment %in% c('control', 'negative'), lm(score ~ time*treatment + highest.education)]
+m3.3 <- dd[treatment %in% c('control', 'neutral'),  lm(score ~ time*treatment + highest.education)]
+stargazer(m3.1, m3.2, m3.3, type='text')
+```
+
+
+
 
 
 --- 
@@ -131,3 +146,4 @@ m51.2 <- getLongTimeModel(c('neutral', 'control'))
 m51.3 <- getLongTimeModel(c('negative', 'control'))
 stargazer(m51.1, m51.2, m51.3, type='text')
 ```
+
