@@ -141,6 +141,10 @@ data_att_edu<- data[, .N, by=c('age.demographic','status','highest.education')]
 keycol = c('age.demographic')
 setorderv(data_att_edu, keycol)
 data_att_edu[status=='complete']
+
+data_att_eng<- data[, .N, by=c('age.demographic','status','english.native')]
+setorder(data_att_eng, 'age.demographic')
+data_att_eng[status=='complete']
 ```
 
 ```{r}
