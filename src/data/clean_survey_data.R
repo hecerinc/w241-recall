@@ -82,7 +82,7 @@ x$q25.score <- sapply(x$q25, score_answers, recall_list_2, USE.NAMES = F)
 
 
 # Remove the actual answers
-x <- select(x, -q12, -q25)
+# x <- select(x, -q12, -q25)
 
 
 
