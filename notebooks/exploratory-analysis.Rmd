@@ -1,0 +1,148 @@
+---
+title: "lc-memorization-analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+library(ggplot2)
+install.packages("cobalt")
+library("cobalt")
+library(grid)
+library(gridExtra)
+```
+
+```{r}
+data = setDT(x)
+```
+
+**Power Analysis**
+```{r}
+#Assumption of 0.1 change in score - estimate was off
+power.t.test(n= NULL, delta = .1, sd = .25, sig.level = 0.05, power = 0.8, type = "two.sample", alternative = "one.sided")
+#experiment <- function(treat_mean = 90, control_mean=80, n_per_group=10) {
+  #treat_group   <- rnorm(n=n_per_group, mean=treat_mean,   sd=10)
+  #control_group <- rnorm(n=n_per_group, mean=control_mean, sd=10)
+  #t.test(treat_group, control_group)$p.value
+#}
+#mean(replicate(100, experiment(control_mean=80, n_per_group=20)) < 0.05)
+power.t.test(n=30, delta = .1, sd = .25, sig.level = 0.05, power = NULL, type = "two.sample", alternative = "one.sided")
+```
+
+
+**Covariate Balance Check**
+```{r echo=FALSE}
+# counts
+#ggplot(data, aes(x=gender)) + geom_bar()
+p1 <- ggplot(data, aes(x=gender, fill = age.demographic)) +
+  geom_bar(position="stack")
+p1 <- p1 + theme(axis.text.x = element_text(angle = 25, hjust = 1))
+p2 <- ggplot(data, aes(x=highest.education, fill = age.demographic)) +
+  geom_bar(position="stack")
+p2 <- p2 + theme(axis.text.x = element_text(angle = 30, hjust = 1))
+p3 <- ggplot(data, aes(x=english.native, fill = age.demographic)) +
+  geom_bar()
+grid.arrange(p1,p2,p3, ncol=2, top = "Covariate Distributions")
+```
+```{r}
+install.packages("WeightIt")
+install.packages("mlogit")
+library(mlogit)
+library("WeightIt")
+cov.mn <- subset(data, select = -c(treatment, age.demographic, highest.education, gender, english.native))
+#Using WeightIt to generate weights with multinomial
+#logistic regression
+W.out.mn <- weightit(age.demographic ~ cov.mn, data = data,
+                     method = "ps", use.mlogit = FALSE)
+bal.tab(W.out.mn, un = TRUE)
+bal.tab(W.out.mn, un = TRUE, disp.means = TRUE, which.treat = .all)
+?WeightIt::method_ps
+```
+```{r}
+bal.tab(age.demographic ~ highest.education + gender + english.native, data = data, thresholds = c(m = .1))
+```
+
+
+
+```{r}
+bal.tab(treatment ~ age.demographic + highest.education + gender + english.native, data = data, thresholds = c(m = .1))
+```
+**Attrition**
+
+```{r}
+# Adding a status column of missing, attrition, or completed the test
+data[, status := ifelse((q12.score != 0 & q25.score == 0 & finished == 0) | (finished == 1 & q12.score != 0 & q25.score == 0), "attritted", ifelse((q12.score == 0 & q25.score == 0) | (q12.score == 0 & q25.score != 0), "missing_data", "complete"))]
+```
+
+```{r}
+#Creating subsets
+#Simple subset by treatment
+data_att_simple = data[, .N, by='treatment']
+#Subset by treatment AND complete/attrition/missing data status
+data_att <- data[, .N, by=c('treatment', 'status')]
+setorder(data_att, cols = 'treatment')
+data_att
+#Even more subsetting including our age group blocking
+data_att_age <- data[, .N, by=c('age.demographic','treatment', 'status')]
+setorder(data_att_age, cols = 'age.demographic')
+data_att_age
+#Including attrition/missing data, equally distributed!
+res <- data_att_simple[, chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
+res
+#Taking into account attrition for entire experiment
+res2 <- data_att[status == 'complete', chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
+res2
+#Now by age group!
+#18-30
+res3 <- data_att_age[status == 'complete' & age.demographic == '18-30' , chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
+res3
+#30-40
+res4 <- data_att_age[status == 'complete' & age.demographic == '30-40' , chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
+res4
+#The rest give warning of "Chi-squared approximation may be incorrect"
+#Makes sense since we have much less data in these age groups compared to younger than 40
+#40-50
+res5 <- data_att_age[status == 'complete' & age.demographic == '40-50' , chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
+res5
+#50-60
+res6 <- data_att_age[status == 'complete' & age.demographic == '50-60' , chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
+res6
+#60+
+res7 <- data_att_age[status == 'complete' & age.demographic == '60+' , chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
+res7
+#Creating attrition table of p values
+data_att_p <- data.table(
+  age.demographic = c('18-30','30-40', '40-50', '50-60', '60+'),
+  p.value = c(res3$p.value,res4$p.value,res5$p.value,res6$p.value,res7$p.value)
+)
+data_att_p
+```
+
+```{r}
+p_attrition1 <- ggplot(data, aes(x=status, fill = age.demographic)) +
+  geom_bar(position="stack")
+p_attrition2 <- ggplot(data, aes(x=status, fill = gender)) +
+  geom_bar(position="stack")
+grid.arrange(p_attrition1, p_attrition2, top = "Attrition by Age and Gender")
+```
+```{r}
+keycol = c('age.demographic','treatment')
+setorderv(data_att_age, keycol)
+data_att_age
+
+data_att_gender <- data[, .N, by=c('age.demographic', 'treatment','status','gender')]
+data_att_gender[status=='complete']
+keycol = c('age.demographic','treatment')
+setorderv(data_att_gender, keycol)
+data_att_gender[status=='complete']
+
+data_att_edu<- data[, .N, by=c('age.demographic','status','highest.education')]
+keycol = c('age.demographic')
+setorderv(data_att_edu, keycol)
+data_att_edu[status=='complete']
+```
+
+```{r}
+data_att_gender <- data[, .N, by=c('age.demographic', 'status','gender')]
+data_att_gender[status=='complete']
