@@ -1,5 +1,5 @@
 ---
-title: "lc-memorization-analysis"
+title: "exploratory-analysis"
 output: html_document
 ---
 
@@ -11,25 +11,82 @@ install.packages("cobalt")
 library("cobalt")
 library(grid)
 library(gridExtra)
+install.packages("effectsize")
+library(effectsize)
+install.packages("WeightIt")
+install.packages("mlogit")
+library(mlogit)
+library("WeightIt")
 ```
 
 ```{r}
 data = setDT(x)
+# Adding a status column of missing, attrition, or completed the test
+data[, status := ifelse((q12.score != 0 & q25.score == 0 & finished == 0) | (finished == 1 & q12.score != 0 & q25.score == 0), "attritted", ifelse((q12.score == 0 & q25.score == 0) | (q12.score == 0 & q25.score != 0), "missing_data", "complete"))]
 ```
 
 **Power Analysis**
 ```{r}
-#Assumption of 0.1 change in score - estimate was off
-power.t.test(n= NULL, delta = .1, sd = .25, sig.level = 0.05, power = 0.8, type = "two.sample", alternative = "one.sided")
+
+#Assumption of 10% change in score - estimate was off
+power.t.test(n= NULL, delta = .1, sd = .1, sig.level = 0.05, power = 0.8, type = "two.sample", alternative = "one.sided")
+#pwr.t.test(n=NULL, d=.1, sig.level=0.05, power=0.8, type="two.sample", alternative="greater")
+
+experiment <- function(treat_mean = 100, control_mean=90, n_per_group=10) {
+  treat_group   <- rnorm(n=n_per_group, mean=treat_mean,   sd=10)
+  control_group <- rnorm(n=n_per_group, mean=control_mean, sd=10)
+  t.test(treat_group, control_group)$p.value
+}
+mean(replicate(100, experiment(treat_mean = 100, control_mean=90, n_per_group=14)) < 0.05)
+
+#Actual experiment
+#see below code chunk for all treatment groups
+#power.t.test(n=30, delta = .1, sd = .1, sig.level = 0.05, power = NULL, type = "two.sample", alternative = "one.sided")
+
 #experiment <- function(treat_mean = 90, control_mean=80, n_per_group=10) {
   #treat_group   <- rnorm(n=n_per_group, mean=treat_mean,   sd=10)
   #control_group <- rnorm(n=n_per_group, mean=control_mean, sd=10)
   #t.test(treat_group, control_group)$p.value
 #}
-#mean(replicate(100, experiment(control_mean=80, n_per_group=20)) < 0.05)
-power.t.test(n=30, delta = .1, sd = .25, sig.level = 0.05, power = NULL, type = "two.sample", alternative = "one.sided")
+#mean(replicate(100, experiment(treat_mean = 90, control_mean=80, n_per_group=14)) < 0.05)
+
 ```
 
+```{r}
+data_means <- data[status=='complete', mean(q25.score-q12.score), by=treatment]
+data_sd <- data[status=='complete', sd(q25.score-q12.score), by=treatment]
+
+#positive power calc
+d_pos <- (data_means[treatment=='positive', V1]-data_means[treatment=='control', V1])
+
+sd_pos <- sd_pooled(data[status=='complete' & treatment=='positive', (q25.score-q12.score)],data[status=='complete' & treatment=='control', (q25.score-q12.score)])
+
+power.t.test(n=29, delta = d_pos, sd = sd_pos, sig.level = 0.05, power = NULL, type = "two.sample", alternative = "one.sided")
+
+
+#neutral power calc
+d_neu <- (data_means[treatment=='neutral', V1]-data_means[treatment=='control', V1])
+
+sd_neu <- sd_pooled(data[status=='complete' & treatment=='neutral', (q25.score-q12.score)],data[status=='complete' & treatment=='control', (q25.score-q12.score)])
+
+power.t.test(n=29, delta = d_neu, sd =  sd_neu, sig.level = 0.05, power = NULL, type = "two.sample", alternative = "one.sided")
+
+#negative power calc
+d_neg <- (data_means[treatment=='negative', V1]-data_means[treatment=='control', V1])
+
+sd_neg <- sd_pooled(data[status=='complete' & treatment=='negative', (q25.score-q12.score)],data[status=='complete' & treatment=='control', (q25.score-q12.score)])
+
+power.t.test(n=29, delta = d_neg, sd =  sd_neg, sig.level = 0.05, power = NULL, type = "two.sample", alternative = "one.sided")
+
+
+#RI
+#experiment2 <- function(treat_mean = 100, control_mean=90, n_per_group =10) {
+  #treat_group   <- rnorm(n=n_per_group, mean=treat_mean,   sd=data_sd[treatment=='neutral', V1])
+  #control_group <- rnorm(n=29, mean=control_mean, sd=data_sd[treatment=='control', V1])
+  #t.test(treat_group, control_group)$p.value
+#}
+#mean(replicate(100, experiment(treat_mean = data_means[treatment=='neutral', V1], control_mean=data_means[treatment=='control', V1], n_per_group = 30)) < 0.05)
+```
 
 **Covariate Balance Check**
 ```{r echo=FALSE}
@@ -45,36 +102,11 @@ p3 <- ggplot(data, aes(x=english.native, fill = age.demographic)) +
   geom_bar()
 grid.arrange(p1,p2,p3, ncol=2, top = "Covariate Distributions")
 ```
-```{r}
-install.packages("WeightIt")
-install.packages("mlogit")
-library(mlogit)
-library("WeightIt")
-cov.mn <- subset(data, select = -c(treatment, age.demographic, highest.education, gender, english.native))
-#Using WeightIt to generate weights with multinomial
-#logistic regression
-W.out.mn <- weightit(age.demographic ~ cov.mn, data = data,
-                     method = "ps", use.mlogit = FALSE)
-bal.tab(W.out.mn, un = TRUE)
-bal.tab(W.out.mn, un = TRUE, disp.means = TRUE, which.treat = .all)
-?WeightIt::method_ps
-```
-```{r}
-bal.tab(age.demographic ~ highest.education + gender + english.native, data = data, thresholds = c(m = .1))
-```
-
-
 
 ```{r}
 bal.tab(treatment ~ age.demographic + highest.education + gender + english.native, data = data, thresholds = c(m = .1))
 ```
 **Attrition**
-
-```{r}
-# Adding a status column of missing, attrition, or completed the test
-data[, status := ifelse((q12.score != 0 & q25.score == 0 & finished == 0) | (finished == 1 & q12.score != 0 & q25.score == 0), "attritted", ifelse((q12.score == 0 & q25.score == 0) | (q12.score == 0 & q25.score != 0), "missing_data", "complete"))]
-```
-
 ```{r}
 #Creating subsets
 #Simple subset by treatment
