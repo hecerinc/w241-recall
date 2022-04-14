@@ -5,6 +5,7 @@ date: "W241 Experiments and Causal Inference - Spring 2022"
 output:
   pdf_document: 
     number_sections: yes
+    fig_caption: yes
   word_document: default
 ---
 
@@ -96,7 +97,7 @@ knitr::include_graphics("data_def.png")
 
 ## Covariates
 
-```{r truth table, include=FALSE}
+```{r truth table, echo=FALSE, fig.cap="Data Definitions for Completion and Attrition"}
 
 dt <- data.frame( n = c("Missing Data", "Missing Data", "Attrition","Complete Data"),
                   r = c("No", "No", "Yes","Yes"),
@@ -105,13 +106,9 @@ dt <- data.frame( n = c("Missing Data", "Missing Data", "Attrition","Complete Da
 
 colnames(dt) <- c("Data Definitions","Completed First Memory Task","Completed Second Memory Task")
 
-```
-
-```{r print truth table, fig.cap="Data Definitions for Completion and Attrition"}
 knitr::kable(dt)
+# why isn't the caption showing up??
 ```
-
-
 
 * VIZ: covariate balance check
 
