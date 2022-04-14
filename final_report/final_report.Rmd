@@ -143,7 +143,7 @@ knitr::include_graphics("flowchart.png")
 
 We did not score with a penalty 
 Blocking error - overlap at age 40
-No active monitoring -> not fully engaging, or cheating
+No active monitoring -> not fully engaging, or cheating 
 
 
 # Conclusion
