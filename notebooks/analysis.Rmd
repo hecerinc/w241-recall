@@ -1,0 +1,154 @@
+---
+title: "Difference in differences analysis"
+output: html_notebook
+---
+
+
+# TODO: 
+
+- [ ] Add robust standard errors for all models
+- [ ] Check stargazer output
+
+```{r load libraries, warning=F}
+library(data.table)
+library(stargazer)
+```
+
+```{r load data}
+load('../data/processed/survey_data_clean_20220410.RData')
+d <- data.table(x)
+```
+
+```{r}
+d
+```
+
+
+```{r}
+# Remove the ones that have no Q12 data (missing data)
+d <- d[q12.score != 0,]
+
+# TODO: check this (attrition?). Limit the results to answers that have something for Q25
+d[q25.score == 0, ]
+d[is.na(posttask.time),]
+# These two above are *not* the same, I'm gonna keep the ones that are finished (2/7). The other 5/7 have no time spent in Q25 so we're good removing those.
+d <- d[!is.na(posttask.time),]
+```
+
+```{r} 
+getDIDModel <- function(subset_groups  = c('positive', 'control')) {
+	d1 <- d[treatment %in% subset_groups, ]
+	d1.q1  <- d1[, .(treatment, score=q12.score, time=0)]
+	d1.q25 <- d1[, .(treatment, score=q25.score, time=1)]
+	d1.both <- rbind(d1.q1, d1.q25)
+	return(d1.both[, lm(score ~ time + treatment + time*treatment)])
+}
+```
+
+
+## 1. Estimate the simple (short) DID model
+
+```{r 1.1 Positive vs Control}
+# 1.1 Positive vs Control
+m1.1 <- getDIDModel(c('positive', 'control'))
+summary(m1.1)
+```
+```{r 1.2 Neutral vs Control}
+# 1.2 Neutral vs Control
+m1.2 <- getDIDModel(c('neutral', 'control'))
+summary(m1.2)
+```
+
+
+```{r 1.3 Negative vs Control}
+# 1.3 Negative vs Control
+m1.3 <- getDIDModel(c('negative', 'control'))
+summary(m1.3)
+```
+
+## 2. Blocked model
+
+```{r}
+getBlockedModel <- function(subset_groups = c('control', 'positive')) {
+	d1 <- d[treatment %in% subset_groups, ]
+	d1.q1  <- d1[, .(treatment, age.demographic, score=q12.score, time=0)]
+	d1.q25 <- d1[, .(treatment, age.demographic, score=q25.score, time=1)]
+	d1.both <- rbind(d1.q1, d1.q25)
+	return(d1.both[, lm(score ~ time*treatment + age.demographic)])
+}
+```
+
+```{r 2. Run the block models}
+m2.1 <- getBlockedModel(c('control', 'positive'))
+m2.2 <- getBlockedModel(c('control', 'neutral'))
+m2.3 <- getBlockedModel(c('control', 'negative'))
+stargazer(m2.1, m2.2, m2.3, type='text')
+```
+
+
+## 3. Covariate (long) model
+
+```{r}
+dd <- tidyr::gather(d, time, score, q12.score:q25.score)
+dd$time <- ifelse(dd$time == 'q12.score', 0, 1)
+dd <- data.table(dd)
+```
+
+```{r}
+m3.1 <- dd[treatment %in% c('control', 'positive'), lm(score ~ time*treatment + highest.education)]
+m3.2 <- dd[treatment %in% c('control', 'negative'), lm(score ~ time*treatment + highest.education)]
+m3.3 <- dd[treatment %in% c('control', 'neutral'),  lm(score ~ time*treatment + highest.education)]
+stargazer(m3.1, m3.2, m3.3, type='text')
+```
+
+
+
+
+
+--- 
+
+# Run on time outcome variable
+
+```{r}
+getShortTimeModel <- function(subset_groups = c('positive', 'control')) {
+	d1 <- d[treatment %in% subset_groups, ]
+	d1.pretask  <- d1[, .(treatment, Y=pretask.time, time=0)]
+	d1.posttask <- d1[, .(treatment, Y=posttask.time, time=1)]
+	d1.both <- rbind(d1.pretask, d1.posttask)
+	return(d1.both[, lm(Y ~ time*treatment)])
+}
+```
+
+```{r Short time model}
+m50.1 <- getShortTimeModel(c('positive', 'control'))
+m50.2 <- getShortTimeModel(c('neutral', 'control'))
+m50.3 <- getShortTimeModel(c('negative', 'control'))
+stargazer(m50.1, m50.2, m50.3, type='text')
+```
+
+
+## Run longer model
+
+```{r}
+getLongTimeModel <- function(subset_groups = c('positive', 'control')) {
+	d1 <- d[treatment %in% subset_groups, ]
+	d1.pretask  <- d1[, .(treatment, Y=pretask.time, time=0, age.demographic)]
+	d1.posttask <- d1[, .(treatment, Y=posttask.time, time=1, age.demographic)]
+	d1.both <- rbind(d1.pretask, d1.posttask)
+	return(d1.both[, lm(Y ~ time*treatment + age.demographic)])
+}
+```
+
+
+```{r Long time model}
+m51.1 <- getLongTimeModel(c('positive', 'control'))
+m51.2 <- getLongTimeModel(c('neutral', 'control'))
+m51.3 <- getLongTimeModel(c('negative', 'control'))
+stargazer(m51.1, m51.2, m51.3, type='text')
+```
+
+```{r}
+anova(m1.1,m2.1)
+anova(m50.1,m51.1)
+```
+

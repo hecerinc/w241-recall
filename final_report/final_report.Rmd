@@ -1,0 +1,47 @@
+---
+title: "How do different audio stimuli affect cognitive function?"
+author: "Laura Cheng, Eda Kavlakoglu, Liz Nichols, Hector Rincon"
+date: "W241 Experiments and Causal Inference - Spring 2022"
+output:
+  pdf_document:
+    number_sections: yes
+  word_document: default
+---
+
+```{r global options, include = FALSE}
+```
+
+
+```{r package loads, warning=FALSE, message=FALSE}
+library(data.table)
+library(sandwich)
+library(lmtest)
+library(ggplot2)
+library(knitr)
+library(patchwork)
+library(stargazer)
+```
+
+
+\tableofcontents
+\newpage
+
+# Introduction
+
+In this paper, we explore the impact of four audio stimuli of varying emotional affect on cognitive function. More specifically, does negative audio stimuli impair cognitive performance compared to positive and neutral ones? Using a difference-in-differences (DID) experiment design in Qualtrics, participants were randomly assigned to conduct four tasks in the following order–a demographic survey, a pre-treatment memory recognition task, a 5-minute audio-treatment, and a post-treatment memory recognition task. We found that…
+
+Previous studies have tested the impact of various audio content with varying results. For example, when we explore meditation as a positive treatment and its effects on cognition, results have demonstrated reductions in mind-wandering, leading to improvements in GRE reading comprehension scores ^[https://pubmed.ncbi.nlm.nih.gov/23538911/].
+
+
+# Experimental Design
+
+# Power Analysis
+
+# Data Analysis
+
+# Results
+
+# Conclusion
+
+
+
