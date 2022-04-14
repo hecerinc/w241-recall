@@ -9,29 +9,16 @@ output:
 ---
 
 ```{r global options, include = FALSE}
-knitr::opts_chunk$set(include = FALSE, message = FALSE, warning = FALSE )
-
-knitr::knit_engines$set(problem_description = function(options) {
-  code <- paste(options$code, collapse = "\n")
-})
 ```
 
 
 ```{r package loads, warning=FALSE, message=FALSE}
 library(data.table)
-install.packages("sandwich")
 library(sandwich)
-install.packages("lmtest")
 library(lmtest)
 library(ggplot2)
 library(knitr)
-install.packages("Metrics")                 
-library("Metrics")
-install.packages("AER")
-library(AER) 
-install.packages("patchwork")
 library(patchwork)
-install.packages("stargazer")
 library(stargazer)
 ```
 
