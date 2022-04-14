@@ -149,5 +149,6 @@ stargazer(m51.1, m51.2, m51.3, type='text')
 
 ```{r}
 anova(m1.1,m2.1)
+anova(m50.1,m51.1)
 ```
 
