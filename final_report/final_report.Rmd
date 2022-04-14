@@ -49,26 +49,40 @@ d <- d[!is.na(posttask.time),]
 
 # Introduction
 
-In this paper, we explore the impact of four audio stimuli of varying emotional affect on cognitive function. More specifically, does negative audio stimuli impair cognitive performance compared to positive and neutral ones? Using a difference-in-differences (DID) experiment design in Qualtrics, participants were randomly assigned to conduct four tasks in the following order–a demographic survey, a pre-treatment memory recognition task, a 5-minute audio-treatment, and a post-treatment memory recognition task. We found that…
+In this paper, we explore the impact of four audio stimuli of varying emotional effect on cognitive function. More specifically, does negative audio stimuli impair cognitive performance compared to positive and neutral ones? Using a difference-in-differences (`DID`) experiment design in Qualtrics, participants completed a baseline memorization task, then were randomly assigned to a stimuli and asked to complete a second memorization task after. 
+
+We found that there was no statistically significant effect of negative stimuli on cognitive function. We acknowledge as well that the negative stimuli used in this experiment may not have been strong enough to create a treatment effect, and also that treatment may need to be repeated over time to detect an effect. 
+
+## Prior Research
 
 Previous studies have tested the impact of various audio content with varying results. For example, when we explore meditation as a positive treatment and its effects on cognition, results have demonstrated reductions in mind-wandering, leading to improvements in GRE reading comprehension scores ^[https://pubmed.ncbi.nlm.nih.gov/23538911/]. In other studies, researchers found that it had also been connected to increases in left hippocampal volume in the brain as well as working and recognition memory performance ^[https://www.sciencedirect.com/science/article/abs/pii/S016643281830322X]. However, many of these experiments were conducted over multiple week periods, not as a single exposure study.
 
-While there is stronger evidence of positive effects on cognitive performance for meditative content, the results are less conclusive for more negative content, such as shocking news–i.e. announcements related to wars, school shootings, pandemics, et cetera. A Finland study conducted a DID analysis to understand the impact of school shootings on a national high school examination and found that test scores dropped by 4.3 percentage points among males only ^[https://www.sciencedirect.com/science/article/pii/S0176268016301768]. That said, there are many stressors that a group of males can undergo over the year period between examinations, and it may be impractical to conclude that one traumatic event can have such a long-term effect on only one sex. In another study, researchers conducted an experiment around news exposure among older adults, which showed no effect on stress or cognitive function ^[https://journals.sagepub.com/doi/abs/10.1177/0091415017729684]. While there’s evidence of negative effects on cognitive functioning from direct trauma ^[https://link.springer.com/article/10.1186/1471-2377-10-61], such as the various forms of abuse, the indirect impact of alarming incidents is more unclear. While repeated exposure to negative content may be necessary to see a significant impairment on cognition, this experiment seeks to measure the extent to which users underperform on memory tasks after a single exposure to negative stimuli compared to that of positive and neutral ones. 
+While there is stronger evidence of positive effects on cognitive performance for meditative content, the results are less conclusive for more negative content, such as shocking news–i.e. announcements related to wars, school shootings, pandemics, et cetera. A Finland study conducted a `DID` analysis to understand the impact of school shootings on a national high school examination and found that test scores dropped by 4.3 percentage points among males only ^[https://www.sciencedirect.com/science/article/pii/S0176268016301768]. That said, there are many stressors that a group of males can undergo over the year period between examinations, and it may be impractical to conclude that one traumatic event can have such a long-term effect on only one sex. 
+
+In another study, researchers conducted an experiment around news exposure among older adults, which showed no effect on stress or cognitive function ^[https://journals.sagepub.com/doi/abs/10.1177/0091415017729684]. While there’s evidence of negative effects on cognitive functioning from direct trauma ^[https://link.springer.com/article/10.1186/1471-2377-10-61], such as the various forms of abuse, the indirect impact of alarming incidents is more unclear. 
+
+Repeated exposure to negative content may be necessary to see a significant impairment on cognition, however this experiment seeks to measure the extent to which users underperform on memory tasks after a single exposure to negative stimuli compared to that of positive and neutral ones. 
 
 
 ## Recruitment
 
-Participants were recruited through word of mouth sharing with friends, family and other University of California, Berkeley students in addition to incentivized recruitment through Mechanical Turk. Because we recruited participants without respect to geographic location, we included a question in the first section of the survey to determine whether English is the participant's native language. This allowed us to include a covariate to account for any potential bias resulting from an unaccounted disadvantage, as the memorization task used English words.
+Our audio content experiment began and concluded in April 2022. Participants were recruited through word of mouth sharing with friends, family and other University of California, Berkeley students in addition to incentivized recruitment through Mechanical Turk. Because we recruited participants without respect to geographic location, we included a question in the first section of the survey to determine whether English is the participant's native language. This allowed us to include a covariate to account for any potential bias resulting from an unaccounted disadvantage, as the memorization task used English words.
 
+
+\newpage
 
 # Experimental Design
 
-```{r}
+We conducted the experiment using Qualtrics which allowed us to create a custom survey. The survey started with a pre-treatment question block asking for the participant's consent to data collection and demographic data, such as age range, gender, education, and English as a first language, as covariates to include in the analysis. If the user did not consent to participate, they immediately exited the experiment. Blocking was implemented by age range as we anticipated the results from older participants could create more variance given that memory can deteriorate with age. 
 
+Each participant was then prompted to complete a pre-treatment memory recognition task, where 30 words were shown for a period of one minute. Following exposure to this random list of words, they were then given 30 seconds to select the words that they recognized from another list of 50. The results from this task provided a baseline for cognitive performance. 
+
+
+```{r survey, echo=FALSE, fig.cap="Memorization Task in Survey", out.width = '50%', fig.align='center'}
+# to adjust the caption, edit fig.cap above
+knitr::include_graphics("data_def.png")
 ```
-Our audio content experiment began and concluded in April 2022. The sample includes XXX participants who were recruited through the personal social networks (i.e. friends, family, colleagues, classmates) and the use of Mechanical Turk, where no special targeting criteria was provided to exclude a demographic. Once participants were engaged, a pre-treatment survey was administered via Qualtrics to gain consent and block randomize respondents by age into each treatment group. If the user did not consent to participate, they immediately exited the experiment. Blocking was implemented as older participants can potentially create more variance given that memory can deteriorate with age. The survey also collected other demographic data, such as gender, education, and English as a first language, as covariates to include in the analysis. 
 
-Following the survey, each participant engaged in a pre-treatment memory recognition task, where 30 words were shown for a period of one minute. Following exposure to this random list of words, they were then given 30 seconds to select the words that they recognized from another list of 50. The results from this task provided a baseline for cognitive performance. 
 
 In each block, participants were then randomly assigned to one of four groups–control, positive, neutral, and negative. All treatments contained an audio file, which was around five minutes in length. The control group received an audio of white noise. The positive treatment group listened to a meditation from Headspace while the neutral and negative treatment groups were each given a 5 minute podcast; one was on the science of finger snapping and the other was focused on the tragedies of the Ukraine War. After exposure to the treatment, participants were asked to complete another memory recognition task with a different set of 30 words. Cognitive outcomes in this experiment were primarily measured by the number of words correctly recognized. While we also measured the length of time users took to complete this memory task, we do not expect many users to finish before the allotted 30 second time period. 
 
@@ -107,10 +121,15 @@ dt <- data.frame( n = c("Missing Data", "Missing Data", "Attrition","Complete Da
 colnames(dt) <- c("Data Definitions","Completed First Memory Task","Completed Second Memory Task")
 
 knitr::kable(dt)
-# why isn't the caption showing up??
+# why isn't the fig caption showing up??
 ```
 
+
+
+
 * VIZ: covariate balance check
+
+
 
 ## Survey design
 
