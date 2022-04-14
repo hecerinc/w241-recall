@@ -3,9 +3,9 @@ title: "How do different audio stimuli affect cognitive function?"
 author: "Laura Cheng, Eda Kavlakoglu, Liz Nichols, Hector Rincon"
 date: "W241 Experiments and Causal Inference - Spring 2022"
 output:
-  word_document: default
   pdf_document:
     number_sections: yes
+  word_document: default
 ---
 
 ```{r global options, include = FALSE}
