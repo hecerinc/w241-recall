@@ -83,7 +83,7 @@ knitr::include_graphics("design.png")
 ```
 
 
-Each participant was then prompted to complete a pre-treatment memory recognition task, where 30 words were shown for a period of one minute (Figure \@ref(fig:instructions)). Following exposure to this random list of words, they were then given 30 seconds to select the words that they recognized from another list of 50 (Figure \@ref(fig:task)). The results from this task provided a baseline for cognitive performance. Within each block, participants were then randomly assigned to one of four groups–control, positive, neutral, and negative. After exposure to the treatment, participants were asked to complete another memory recognition task with a different set of 30 words. Cognitive outcomes in this experiment were primarily measured by the number of words correctly recognized. While we also measured the length of time users took to complete this memory task, we did not expect many users to finish before the allotted 30 second time period.   
+Each participant was then prompted to complete a pre-treatment memory recognition task, where 30 words were shown for a period of one minute (Figure \@ref(fig:instructions)). Following exposure to this random list of words (sourced from random,org), participants were then given 30 seconds to select the words that they recognized from another list of 50 (Figure \@ref(fig:task)). The results from this task provided a baseline for cognitive performance. Within each block, participants were then randomly assigned to one of four groups–control, positive, neutral, and negative. After exposure to the treatment, participants were asked to complete another memory recognition task with a different set of 30 words. 
 
 
 ```{r instructions, echo=FALSE, fig.cap="Instructions in Survey", out.width = '75%', fig.align='center'}
@@ -110,10 +110,12 @@ knitr::include_graphics("data_def.png")
 
 ## Outcome Variables
 
+Cognitive outcomes in this experiment were primarily measured by the number of words correctly recognized. While we also measured the length of time users took to complete this memory task, we did not expect many users to finish before the allotted 30 second time period.   
 
 
 
-==EDA (Kavlakoglu)== #haha i get it -liz
+
+==EDA (Kavlakoglu)== 
 
 *add the ROXO methodology*
 
@@ -143,8 +145,10 @@ knitr::include_graphics("flowchart.png")
 
 * VIZ: DID line plot
 
+
 ## Attrition
 
+In this experiment, attrition was defined as any individual who completed the first memory recognition task, but not the second one.
 
 ```{r truth table, echo=FALSE, fig.cap="Data Definitions for Completion and Attrition"}
 
@@ -168,15 +172,13 @@ knitr::kable(dt)
 ## Limitations
 
 
-There are reasons to suspect that the assigned treatment influences outcomes for reasons other than the treatment that is actually delivered. Since we did not actively monitor users as they participate in this experiment we cannot be confident that every respondent engaged with the stimulus in the same manner. For example, participants may have multi-tasked during the audio treatment or they may have altered results by soliciting help from uninvolved parties on memory tasks. Additionally, the different treatments may have been more engaging than others. For example, it may be harder for a participant to focus on a white noise control for a five minute duration, causing more users in this group to attrit. In this experiment, attrition was defined as any individual who completed the first memory recognition task, but not the second one.
+There are reasons to suspect that the assigned treatment influences outcomes for reasons other than the treatment that is actually delivered. Since we did not actively monitor users as they participate in this experiment we cannot be confident that every respondent engaged with the stimulus in the same manner. For example, participants may have multitasked during the audio treatment or they may have taken screenshots of the word list to memorize. 
 
-Since respondents can be located anywhere across in the world, there is little opportunity for participants to discuss the treatment with one another. 
+Additionally, the different treatments may have been more engaging than others. For example, it may be harder for a participant to focus on a white noise control for a five minute duration, causing more users in this group to attrit. 
 
-==LIZ==
+We also acknowledge participants could have "gamed" the experiment by selecting every single word in the recall list. The survey did not tell the participant if their selection was correct or not, which we intended to disincentivize this behavior. However, our scoring methodology did not penalize incorrect answers, so this could have had unintended consequences in our analysis. However, when we reviewed the data and included a penalty for incorrect answers, there were very few instances where the penalized score differed from the simple count score. 
 
-We did not score with a penalty 
-Blocking error - overlap at age 40
-No active monitoring -> not fully engaging, or cheating 
+In our survey design we also made one mistake, creating overlapping age groups for 30-40 and 40-50. So for participants aged 40 may have been confused and declined to participate, or chose one age group inconsistently (i.e. some 40 year olds chose the younger group and others chose the older). 
 
 \newpage
 # Conclusion
