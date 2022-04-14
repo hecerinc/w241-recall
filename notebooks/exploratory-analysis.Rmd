@@ -29,7 +29,7 @@ data[, status := ifelse((q12.score != 0 & q25.score == 0 & finished == 0) | (fin
 ```{r}
 
 #Assumption of 10% change in score - estimate was off
-power.t.test(n= NULL, delta = .1, sd = .1, sig.level = 0.05, power = 0.8, type = "two.sample", alternative = "one.sided")
+power.t.test(n= NULL, delta = 1, sd = 1, sig.level = 0.05, power = 0.8, type = "two.sample", alternative = "one.sided")
 #pwr.t.test(n=NULL, d=.1, sig.level=0.05, power=0.8, type="two.sample", alternative="greater")
 
 experiment <- function(treat_mean = 100, control_mean=90, n_per_group=10) {
@@ -41,7 +41,7 @@ mean(replicate(100, experiment(treat_mean = 100, control_mean=90, n_per_group=14
 
 #Actual experiment
 #see below code chunk for all treatment groups
-#power.t.test(n=30, delta = .1, sd = .1, sig.level = 0.05, power = NULL, type = "two.sample", alternative = "one.sided")
+power.t.test(n=100, delta = 2, sd = 5.14, sig.level = 0.05, power = NULL, type = "two.sample", alternative = "one.sided")
 
 #experiment <- function(treat_mean = 90, control_mean=80, n_per_group=10) {
   #treat_group   <- rnorm(n=n_per_group, mean=treat_mean,   sd=10)
@@ -80,12 +80,12 @@ power.t.test(n=29, delta = d_neg, sd =  sd_neg, sig.level = 0.05, power = NULL, 
 
 
 #RI
-#experiment2 <- function(treat_mean = 100, control_mean=90, n_per_group =10) {
-  #treat_group   <- rnorm(n=n_per_group, mean=treat_mean,   sd=data_sd[treatment=='neutral', V1])
-  #control_group <- rnorm(n=29, mean=control_mean, sd=data_sd[treatment=='control', V1])
-  #t.test(treat_group, control_group)$p.value
-#}
-#mean(replicate(100, experiment(treat_mean = data_means[treatment=='neutral', V1], control_mean=data_means[treatment=='control', V1], n_per_group = 30)) < 0.05)
+experiment2 <- function(treat_mean = 100, control_mean=90, n_per_group =10) {
+  treat_group   <- rnorm(n=n_per_group, mean=treat_mean,   sd=data_sd[treatment=='neutral', V1])
+  control_group <- rnorm(n=29, mean=control_mean, sd=data_sd[treatment=='control', V1])
+  t.test(treat_group, control_group)$p.value
+}
+mean(replicate(100, experiment(treat_mean = data_means[treatment=='neutral', V1], control_mean=data_means[treatment=='control', V1], n_per_group = 30)) < 0.05)
 ```
 
 **Covariate Balance Check**
