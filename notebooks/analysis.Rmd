@@ -88,6 +88,20 @@ stargazer(m2.1, m2.2, m2.3, type='text')
 
 ## 3. Covariate (long) model
 
+```{r}
+dd <- tidyr::gather(d, time, score, q12.score:q25.score)
+dd$time <- ifelse(dd$time == 'q12.score', 0, 1)
+dd <- data.table(dd)
+```
+
+```{r}
+m3.1 <- dd[treatment %in% c('control', 'positive'), lm(score ~ time*treatment + highest.education)]
+m3.2 <- dd[treatment %in% c('control', 'negative'), lm(score ~ time*treatment + highest.education)]
+m3.3 <- dd[treatment %in% c('control', 'neutral'),  lm(score ~ time*treatment + highest.education)]
+stargazer(m3.1, m3.2, m3.3, type='text')
+```
+
+
 
 
 --- 
@@ -102,5 +116,39 @@ getShortTimeModel <- function(subset_groups = c('positive', 'control')) {
 	d1.both <- rbind(d1.pretask, d1.posttask)
 	return(d1.both[, lm(Y ~ time*treatment)])
 }
+```
+
+=======
+```{r Short time model}
+m50.1 <- getShortTimeModel(c('positive', 'control'))
+m50.2 <- getShortTimeModel(c('neutral', 'control'))
+m50.3 <- getShortTimeModel(c('negative', 'control'))
+stargazer(m50.1, m50.2, m50.3, type='text')
+```
+
+
+## Run longer model
+
+```{r}
+getLongTimeModel <- function(subset_groups = c('positive', 'control')) {
+	d1 <- d[treatment %in% subset_groups, ]
+	d1.pretask  <- d1[, .(treatment, Y=pretask.time, time=0, age.demographic)]
+	d1.posttask <- d1[, .(treatment, Y=posttask.time, time=1, age.demographic)]
+	d1.both <- rbind(d1.pretask, d1.posttask)
+	return(d1.both[, lm(Y ~ time*treatment + age.demographic)])
+}
+```
+
+
+```{r Long time model}
+m51.1 <- getLongTimeModel(c('positive', 'control'))
+m51.2 <- getLongTimeModel(c('neutral', 'control'))
+m51.3 <- getLongTimeModel(c('negative', 'control'))
+stargazer(m51.1, m51.2, m51.3, type='text')
+```
+
+```{r}
+anova(m1.1,m2.1)
+anova(m50.1,m51.1)
 ```
 
