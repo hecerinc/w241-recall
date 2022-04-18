@@ -143,7 +143,7 @@ p3 <- ggplot(d, aes(x=english.native, fill = age.demographic)) +
   geom_bar()
 grid.arrange(p1,p2,p3, ncol=2, top = "Covariate Distributions")
 ```
-Most of our survey participants fell within the age groups of 18-30 and 30-40. Between our covariates, highest education was the covariate with the most variance across participants. We then investigated the covariate balance across treatment groups in the age group blocks.
+Most of our survey participants fell within the age groups of 18-30 and 30-40. Between our covariates, highest education was the covariate with the most variance across all participants. We then investigated the covariate balance across treatment groups in the age group blocks for education level.
 
 ```{r, echo = FALSE, fig.cap ="Plots of Highest Education Distribution by Treatment and Age Group"}
 p_distribution4 <- ggplot(d[age.demographic=="18-30",], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 18-30") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
@@ -154,7 +154,7 @@ p_distribution8 <- ggplot(d[age.demographic=="60+"], aes(x=treatment, fill=highe
 
 grid.arrange(p_distribution4,p_distribution5,p_distribution6,p_distribution7, p_distribution8, ncol=2, top = "Covariate Distributions by Age Group: Highest Education")
 ```
-The plot above shows that across treatment and control groups with ample sample size, education is evenly distributed within our experiment.
+The plot above shows that across treatment and control groups with ample sample size, education is evenly distributed within our experiment. 
 
 \newpage
 # Power Analysis
@@ -164,6 +164,12 @@ The plot above shows that across treatment and control groups with ample sample 
 knitr::include_graphics("flowchart.png")
 ```
 
+```{r, echo=FALSE}
+power.t.test(n= NULL, delta = 1, sd = 1, sig.level = 0.05, power = 0.8, type = "two.sample", alternative = "one.sided")
+```
+
+
+Prior to the experiment, we estimated a DID effect of 1 additional word correctly or incorrectly guessed between treatment and control with a standard deviation of 1, aiming for a power of 0.8. This would require at least 14 subjects in each treatment and control group to achieve.
 
 \newpage
 # Data Analysis
