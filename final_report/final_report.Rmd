@@ -126,7 +126,13 @@ Cognitive outcomes in this experiment were primarily measured by the number of w
 
 ## Covariates
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, "fig.cap="Plot of treatment distribution by Age Group"}
+p_attrition3 <- ggplot(data, aes(x=treatment, fill=age.demographic)) + geom_bar(position="stack") + ggtitle("Treatment Distribution by Age Group")
+p_attrition3
+```
+The age range blocking and random assignment led to nearly even distributions of our multiple treatments and control. 
+
+```{r, echo = FALSE, fig.cap = ""}
 p1 <- ggplot(d, aes(x=gender, fill = age.demographic)) +
   geom_bar(position="stack")
 p1 <- p1 + theme(axis.text.x = element_text(angle = 25, hjust = 1))
@@ -138,8 +144,15 @@ p3 <- ggplot(d, aes(x=english.native, fill = age.demographic)) +
 grid.arrange(p1,p2,p3, ncol=2, top = "Covariate Distributions")
 ```
 
-We
+```{r, echo = FALSE, fig.cap =""}
+p_distribution4 <- ggplot(d[age.demographic=="18-30",], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 18-30") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
+p_distribution5 <- ggplot(d[age.demographic=="30-40",], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 30-40") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
+p_distribution6 <- ggplot(d[age.demographic=="40-50",], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 40-50") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
+p_distribution7 <- ggplot(d[age.demographic=="50-60"], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 50-60") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
+p_distribution8 <- ggplot(d[age.demographic=="60+"], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 60+") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
 
+grid.arrange(p_distribution4,p_distribution5,p_distribution6,p_distribution7, p_distribution8, ncol=2, top = "Covariate Distributions by Age Group: Highest Education")
+```
 
 
 \newpage
@@ -174,6 +187,19 @@ knitr::kable(dt)
 # why isn't the fig caption showing up??
 ```
 
+```{r, echo=FALSE, fig.cap = ""}
+#Creating a status column in the original data set based on the previous truth table
+d[, status := ifelse((q12.score != 0 & q25.score == 0 & finished == 0) | (finished == 1 & q12.score != 0 & q25.score == 0), "attritted", ifelse((q12.score == 0 & q25.score == 0) | (q12.score == 0 & q25.score != 0), "missing_data", "complete"))]
+
+#Showing attrition visually
+p_attrition1 <- ggplot(data, aes(x=status, fill = age.demographic)) +
+  geom_bar(position="stack")
+p_attrition2 <- ggplot(data, aes(x=status, fill = gender)) +
+  geom_bar(position="stack")
+grid.arrange(p_attrition1, p_attrition2, top = "Attrition by Age and Gender")
+
+```
+A
 
 \newpage
 # Results
