@@ -18,8 +18,13 @@ library(ggplot2)
 library(knitr)
 library(patchwork)
 library(stargazer)
+<<<<<<< HEAD
+library(grid)
+library(gridExtra)
+=======
 install.packages("vtable")
 library(vtable)
+>>>>>>> 1d98189f9e5b1d7e4ef6beef4d1e212fce2f2b53
 ```
 
 ```{r data clean up, include = FALSE}
@@ -316,8 +321,37 @@ plot_grid(pos_did_plot, neutral_did_plot,  neg_did_plot, labels = "AUTO")
 
 ## Covariates
 
+```{r, echo = FALSE, "fig.cap="Plot of Treatment Distribution by Age Group"}
+p_attrition3 <- ggplot(data, aes(x=treatment, fill=age.demographic)) + geom_bar(position="stack") + ggtitle("Treatment Distribution by Age Group")
+p_attrition3
+```
+The age range blocking and random assignment led to nearly even distributions of our multiple treatments and control. 
 
+```{r, echo = FALSE, fig.cap = "Plots of Age Group Distributions By Covariates"}
+p1 <- ggplot(d, aes(x=gender, fill = age.demographic)) +
+  geom_bar(position="stack")
+p1 <- p1 + theme(axis.text.x = element_text(angle = 25, hjust = 1))
+p2 <- ggplot(d, aes(x=highest.education, fill = age.demographic)) +
+  geom_bar(position="stack")
+p2 <- p2 + theme(axis.text.x = element_text(angle = 30, hjust = 1))
+p3 <- ggplot(d, aes(x=english.native, fill = age.demographic)) +
+  geom_bar()
+grid.arrange(p1,p2,p3, ncol=2, top = "Covariate Distributions")
+```
+Most of our survey participants fell within the age groups of 18-30 and 30-40. Between our covariates, highest education was the covariate with the most variance across all participants. We then investigated the covariate balance across treatment groups in the age group blocks for education level.
 
+```{r, echo = FALSE, fig.cap ="Plots of Highest Education Distribution by Treatment and Age Group"}
+p_distribution4 <- ggplot(d[age.demographic=="18-30",], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 18-30") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
+p_distribution5 <- ggplot(d[age.demographic=="30-40",], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 30-40") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
+p_distribution6 <- ggplot(d[age.demographic=="40-50",], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 40-50") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
+p_distribution7 <- ggplot(d[age.demographic=="50-60"], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 50-60") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
+p_distribution8 <- ggplot(d[age.demographic=="60+"], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 60+") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
+
+<<<<<<< HEAD
+grid.arrange(p_distribution4,p_distribution5,p_distribution6,p_distribution7, p_distribution8, ncol=2, top = "Covariate Distributions by Age Group: Highest Education")
+```
+The plot above shows that across treatment and control groups with ample sample size, education is evenly distributed within our experiment. 
+=======
 * VIZ: covariate balance check
 ```{r}
 #count of respondents
@@ -332,6 +366,7 @@ ggplot(respondent_cnt, aes(fill=treatment, y=count, x=age.demographic, color=tre
     geom_bar(position="dodge", alpha = 0.6, stat="identity")
 ```
 
+>>>>>>> 1d98189f9e5b1d7e4ef6beef4d1e212fce2f2b53
 
 \newpage
 # Power Analysis
@@ -341,6 +376,12 @@ ggplot(respondent_cnt, aes(fill=treatment, y=count, x=age.demographic, color=tre
 knitr::include_graphics("flowchart.png")
 ```
 
+```{r, echo=FALSE}
+power.t.test(n= NULL, delta = 1, sd = 1, sig.level = 0.05, power = 0.8, type = "two.sample", alternative = "one.sided")
+```
+
+
+Prior to the experiment, we estimated a DID effect of 1 additional word correctly or incorrectly guessed between treatment and control with a standard deviation of 1, aiming for a power of 0.8. This would require at least 14 subjects in each treatment and control group to achieve.
 
 \newpage
 # Data Analysis
@@ -365,6 +406,19 @@ knitr::kable(dt)
 # why isn't the fig caption showing up??
 ```
 
+```{r, echo=FALSE, fig.cap = ""}
+#Creating a status column in the original data set based on the previous truth table
+d[, status := ifelse((q12.score != 0 & q25.score == 0 & finished == 0) | (finished == 1 & q12.score != 0 & q25.score == 0), "attritted", ifelse((q12.score == 0 & q25.score == 0) | (q12.score == 0 & q25.score != 0), "missing_data", "complete"))]
+
+#Showing attrition visually
+p_attrition1 <- ggplot(data, aes(x=status, fill = age.demographic)) +
+  geom_bar(position="stack")
+p_attrition2 <- ggplot(data, aes(x=status, fill = gender)) +
+  geom_bar(position="stack")
+grid.arrange(p_attrition1, p_attrition2, top = "Attrition by Age and Gender")
+
+```
+A
 
 \newpage
 # Results
