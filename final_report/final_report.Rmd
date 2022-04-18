@@ -396,20 +396,22 @@ knitr::kable(dt)
 # why isn't the fig caption showing up??
 ```
 
-```{r, echo=FALSE, fig.cap = ""}
+```{r, echo=FALSE, fig.cap = "Plot of Attrition by Age and Treatment"}
 #Creating a status column in the original data set based on the previous truth table
 d[, status := ifelse((q12.score != 0 & q25.score == 0 & finished == 0) | (finished == 1 & q12.score != 0 & q25.score == 0), "attritted", ifelse((q12.score == 0 & q25.score == 0) | (q12.score == 0 & q25.score != 0), "missing_data", "complete"))]
 
 #Showing attrition visually
-p_attrition1 <- ggplot(data, aes(x=status, fill = age.demographic)) +
-  geom_bar(position="stack")
-p_attrition2 <- ggplot(data, aes(x=status, fill = gender)) +
-  geom_bar(position="stack")
-grid.arrange(p_attrition1, p_attrition2, top = "Attrition by Age and Gender")
+p_attrition1 <- ggplot(data, aes(x=age.demographic, fill = status)) +
+  geom_bar(position="dodge")
+p_attrition2 <- ggplot(data, aes(x= treatment, fill = status)) +
+  geom_bar(position="dodge")
+grid.arrange(p_attrition1, p_attrition2, top = "Attrition by Age and Treatment Group")
 
 ```
 
-```{r, echo = FALSE}
+Majority of participants completed the experiment fully, while there were several attritted participants in all treatment and control groups.
+
+```{r, echo = FALSE, fig.cap = "Attrition P-Value Table"}
 #Creating subsets
 #Simple subset by treatment
 data_att_simple = data[, .N, by='treatment']
@@ -452,6 +454,8 @@ data_att_p <- data.table(
 )
 data_att_p
 ```
+
+We can see that in all treatment groups and the control group, even with the attritted participants removed, there is an even distribution of participants within the age group blocks.
 
 \newpage
 # Results
