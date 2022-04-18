@@ -104,7 +104,6 @@ stargazer(m3.1, m3.2, m3.3, type='text')
 
 
 
-
 --- 
 
 # Run on time outcome variable
@@ -119,6 +118,7 @@ getShortTimeModel <- function(subset_groups = c('positive', 'control')) {
 }
 ```
 
+=======
 ```{r Short time model}
 m50.1 <- getShortTimeModel(c('positive', 'control'))
 m50.2 <- getShortTimeModel(c('neutral', 'control'))
