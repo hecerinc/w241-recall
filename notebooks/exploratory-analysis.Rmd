@@ -106,6 +106,17 @@ grid.arrange(p1,p2,p3, ncol=2, top = "Covariate Distributions")
 ```{r}
 bal.tab(treatment ~ age.demographic + highest.education + gender + english.native, data = data, thresholds = c(m = .1))
 ```
+
+```{r}
+install.packages("WeighIt")
+m.data <- matchit(treatment ~ highest.education + gender + english.native, data = data[age.demographic=="18-30"])
+bal.tab(m.data, thresholds = c(m = .1))
+
+bal.plot(m.data, var.name = "highest.education")
+bal.plot(m.data, var.name = "distance", mirror = TRUE, type = "histogram")
+```
+
+
 **Attrition**
 ```{r}
 #Creating subsets
@@ -178,6 +189,25 @@ data_att_eng<- data[, .N, by=c('age.demographic','status','english.native')]
 setorder(data_att_eng, 'age.demographic')
 data_att_eng[status=='complete']
 ```
+
+
+```{r}
+p_distribution3 <- ggplot(data, aes(x=treatment, fill=age.demographic)) + geom_bar(position="stack") + ggtitle("Treatment Distribution by Age Group")
+p_distribution3
+```
+```{r}
+
+p_distribution4 <- ggplot(data[age.demographic=="18-30",], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 18-30") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
+p_distribution5 <- ggplot(data[age.demographic=="30-40",], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 30-40") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
+p_distribution6 <- ggplot(data[age.demographic=="40-50",], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 40-50") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
+p_distribution7 <- ggplot(data[age.demographic=="50-60"], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 50-60") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
+p_distribution8 <- ggplot(data[age.demographic=="60+"], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 60+") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
+
+grid.arrange(p_distribution4,p_distribution5,p_distribution6,p_distribution7, p_distribution8, ncol=2, top = "Covariate Distributions by Age Group: Highest Education")
+
+
+```
+
 
 ```{r}
 data_att_gender <- data[, .N, by=c('age.demographic', 'status','gender')]
