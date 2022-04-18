@@ -3,16 +3,14 @@ title: "How do different audio stimuli affect cognitive function?"
 author: "Laura Cheng, Eda Kavlakoglu, Liz Nichols, Hector Rincon"
 date: "W241 Experiments and Causal Inference - Spring 2022"
 output:
-  pdf_document:
+  bookdown::pdf_document2: 
     number_sections: yes
+    fig_caption: yes
   word_document: default
 ---
 
-```{r global options, include = FALSE}
-```
 
-
-```{r package loads, warning=FALSE, message=FALSE}
+```{r package loads, warning=FALSE, message=FALSE, include=FALSE}
 library(data.table)
 library(sandwich)
 library(lmtest)
@@ -22,26 +20,168 @@ library(patchwork)
 library(stargazer)
 ```
 
+```{r data clean up, include = FALSE}
+load('../data/processed/survey_data_clean_20220410.RData')
+d <- data.table(x)
+
+# Remove the ones that have no Q12 data (missing data)
+d <- d[q12.score != 0,]
+
+# TODO: check this (attrition?). Limit the results to answers that have something for Q25
+d[q25.score == 0, ]
+d[is.na(posttask.time),]
+# These two above are *not* the same, I'm gonna keep the ones that are finished (2/7). The other 5/7 have no time spent in Q25 so we're good removing those.
+d <- d[!is.na(posttask.time),]
+```
+
+```{r models}
+
+```
+
+
+```{r}
+
+```
+
 
 \tableofcontents
 \newpage
 
 # Introduction
 
-In this paper, we explore the impact of four audio stimuli of varying emotional affect on cognitive function. More specifically, does negative audio stimuli impair cognitive performance compared to positive and neutral ones? Using a difference-in-differences (DID) experiment design in Qualtrics, participants were randomly assigned to conduct four tasks in the following order–a demographic survey, a pre-treatment memory recognition task, a 5-minute audio-treatment, and a post-treatment memory recognition task. We found that…
+In this paper, we explore the impact of four audio stimuli of varying emotional effect on cognitive function. More specifically, does negative audio stimuli impair cognitive performance compared to positive and neutral ones? Using a difference-in-differences (`DID`) experiment design in Qualtrics, participants completed a baseline memorization task, then were randomly assigned to a stimuli and asked to complete a second memorization task after. 
 
-Previous studies have tested the impact of various audio content with varying results. For example, when we explore meditation as a positive treatment and its effects on cognition, results have demonstrated reductions in mind-wandering, leading to improvements in GRE reading comprehension scores ^[https://pubmed.ncbi.nlm.nih.gov/23538911/].
+We found that there was no statistically significant effect of negative stimuli on cognitive function. We acknowledge as well that the negative stimuli used in this experiment may not have been strong enough to create a treatment effect, and also that treatment may need to be repeated over time to detect an effect. 
 
+## Prior Research
+
+Previous studies have tested the impact of various audio content with varying results. For example, when we explore meditation as a positive treatment and its effects on cognition, results have demonstrated reductions in mind-wandering, leading to improvements in GRE reading comprehension scores ^[https://pubmed.ncbi.nlm.nih.gov/23538911/]. In other studies, researchers found that it had also been connected to increases in left hippocampal volume in the brain as well as working and recognition memory performance ^[https://www.sciencedirect.com/science/article/abs/pii/S016643281830322X]. However, many of these experiments were conducted over multiple week periods, not as a single exposure study.
+
+While there is stronger evidence of positive effects on cognitive performance for meditative content, the results are less conclusive for more negative content, such as shocking news–i.e. announcements related to wars, school shootings, pandemics, et cetera. A Finland study conducted a `DID` analysis to understand the impact of school shootings on a national high school examination and found that test scores dropped by 4.3 percentage points among males only ^[https://www.sciencedirect.com/science/article/pii/S0176268016301768]. That said, there are many stressors that a group of males can undergo over the year period between examinations, and it may be impractical to conclude that one traumatic event can have such a long-term effect on only one sex. 
+
+In another study, researchers conducted an experiment around news exposure among older adults, which showed no effect on stress or cognitive function ^[https://journals.sagepub.com/doi/abs/10.1177/0091415017729684]. While there’s evidence of negative effects on cognitive functioning from direct trauma ^[https://link.springer.com/article/10.1186/1471-2377-10-61], such as the various forms of abuse, the indirect impact of alarming incidents is more unclear. 
+
+Repeated exposure to negative content may be necessary to see a significant impairment on cognition, however this experiment seeks to measure the extent to which users underperform on memory tasks after a single exposure to negative stimuli compared to that of positive and neutral ones. Based on previous literature, we hypothesize that a negative stimulus will lead to worse cognitive performance while a positive stimulus will improve it. We also expect that our neutral stimulus should perform about the same as the control group.
+
+
+## Recruitment
+
+Our audio content experiment began and concluded in April 2022. Participants were recruited through word of mouth sharing with friends, family and other University of California, Berkeley students in addition to incentivized recruitment through Mechanical Turk. Because we recruited participants without respect to geographic location, we included a question in the first section of the survey to determine whether English is the participant's native language. This allowed us to include a covariate to account for any potential bias resulting from an unaccounted disadvantage, as the memorization task used English words.
+
+
+\newpage
 
 # Experimental Design
 
+## Survey Design
+We conducted the experiment using Qualtrics which allowed us to create a custom survey (Figure \@ref(fig:design)). The survey started with a pre-treatment question block asking for the participant's consent to data collection and demographic data, such as age range, gender, education, and English as a first language, as covariates to include in the analysis. If the user did not consent to participate, they immediately exited the experiment. Blocking was implemented by age range as we anticipated the results from older participants could create more variance given that memory can deteriorate with age. 
+
+
+```{r design, echo=FALSE, fig.cap="Experimental Design Diagram", out.width = '75%', fig.align='center'}
+# to adjust the caption, edit fig.cap above
+knitr::include_graphics("design.png")
+```
+
+
+Each participant was then prompted to complete a pre-treatment memory recognition task, where 30 words were shown for a period of one minute (Figure \@ref(fig:instructions)). Following exposure to this random list of words (sourced from random,org), participants were then given 30 seconds to select the words that they recognized from another list of 50 (Figure \@ref(fig:task)). The results from this task provided a baseline for cognitive performance. Within each block, participants were then randomly assigned to one of four groups–control, positive, neutral, and negative. After exposure to the treatment, participants were asked to complete another memory recognition task with a different set of 30 words. 
+
+
+```{r instructions, echo=FALSE, fig.cap="Instructions in Survey", out.width = '75%', fig.align='center'}
+# to adjust the caption, edit fig.cap above
+knitr::include_graphics("instructions.png")
+```
+
+```{r task, echo=FALSE, fig.cap="Memorization Task in Survey", out.width = '75%', fig.align='center'}
+# to adjust the caption, edit fig.cap above
+knitr::include_graphics("task.png")
+```
+
+## Treatment Descriptions
+
+All treatments contained an audio file, which was around five minutes in length. The control group received an audio of white noise and the positive treatment group listened to a meditation from Headspace. The neutral and negative treatment groups were each given a 5 minute podcast; one was on the science of finger snapping and the other was focused on the tragedies of the Ukraine War. See Figure \@ref(fig:treatments).
+
+
+```{r treatments, echo=FALSE, fig.cap="Treatments and Control", out.width = '50%', fig.align='center'}
+# to adjust the caption, edit fig.cap above
+knitr::include_graphics("data_def.png")
+```
+
+
+
+## Outcome Variables
+
+Cognitive outcomes in this experiment were primarily measured by the number of words correctly recognized. While we also measured the length of time users took to complete this memory task, we did not expect many users to finish before the allotted 30 second time period.   
+
+
+
+
+==EDA (Kavlakoglu)== 
+
+*add the ROXO methodology*
+
+* VIZ: ROXO graph
+
+
+## Covariates
+
+
+
+* VIZ: covariate balance check
+
+
+
+
+\newpage
 # Power Analysis
 
+```{r flowchart, echo=FALSE, fig.cap="Participant Random Assignment Flow Chart", out.width = '50%', fig.align='center'}
+# to adjust the caption, edit above
+knitr::include_graphics("flowchart.png")
+```
+
+
+\newpage
 # Data Analysis
 
+* VIZ: DID line plot
+
+
+## Attrition
+
+In this experiment, attrition was defined as any individual who completed the first memory recognition task, but not the second one.
+
+```{r truth table, echo=FALSE, fig.cap="Data Definitions for Completion and Attrition"}
+
+dt <- data.frame( n = c("Missing Data", "Missing Data", "Attrition","Complete Data"),
+                  r = c("No", "No", "Yes","Yes"),
+                  c = c("No", "Yes","No", "Yes")
+)
+
+colnames(dt) <- c("Data Definitions","Completed First Memory Task","Completed Second Memory Task")
+
+knitr::kable(dt)
+# why isn't the fig caption showing up??
+```
+
+
+\newpage
 # Results
 
+==HECTOR==
+
+## Limitations
+
+
+There are reasons to suspect that the assigned treatment influences outcomes for reasons other than the treatment that is actually delivered. Since we did not actively monitor users as they participate in this experiment we cannot be confident that every respondent engaged with the stimulus in the same manner. For example, participants may have multitasked during the audio treatment or they may have taken screenshots of the word list to memorize. 
+
+Additionally, the different treatments may have been more engaging than others. For example, it may be harder for a participant to focus on a white noise control for a five minute duration, causing more users in this group to attrit. 
+
+We also acknowledge participants could have "gamed" the experiment by selecting every single word in the recall list. The survey did not tell the participant if their selection was correct or not, which we intended to disincentivize this behavior. However, our scoring methodology did not penalize incorrect answers, so this could have had unintended consequences in our analysis. However, when we reviewed the data and included a penalty for incorrect answers, there were very few instances where the penalized score differed from the simple count score. 
+
+In our survey design we also made one mistake, creating overlapping age groups for 30-40 and 40-50. So for participants aged 40 may have been confused and declined to participate, or chose one age group inconsistently (i.e. some 40 year olds chose the younger group and others chose the older). 
+
+\newpage
 # Conclusion
 
-
-
+\newpage
+# References
