@@ -18,6 +18,8 @@ library(ggplot2)
 library(knitr)
 library(patchwork)
 library(stargazer)
+library(grid)
+library(gridExtra)
 ```
 
 ```{r data clean up, include = FALSE}
@@ -124,10 +126,19 @@ Cognitive outcomes in this experiment were primarily measured by the number of w
 
 ## Covariates
 
+```{r, echo = FALSE}
+p1 <- ggplot(d, aes(x=gender, fill = age.demographic)) +
+  geom_bar(position="stack")
+p1 <- p1 + theme(axis.text.x = element_text(angle = 25, hjust = 1))
+p2 <- ggplot(d, aes(x=highest.education, fill = age.demographic)) +
+  geom_bar(position="stack")
+p2 <- p2 + theme(axis.text.x = element_text(angle = 30, hjust = 1))
+p3 <- ggplot(d, aes(x=english.native, fill = age.demographic)) +
+  geom_bar()
+grid.arrange(p1,p2,p3, ncol=2, top = "Covariate Distributions")
+```
 
-
-* VIZ: covariate balance check
-
+We
 
 
 
