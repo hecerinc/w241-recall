@@ -1,0 +1,302 @@
+---
+title: "Untitled"
+author: "Eda Kavlakoglu"
+date: "4/12/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+library(data.table)
+library(stargazer)
+library(tidyverse)
+
+d <- data.table(x)
+colnames(d)
+d$index <- row.names(d)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+#count of respondents
+respondent_cnt <- setorder(d[ , count := .N, by = .(age =age.demographic, treatment)])
+respondent_cnt 
+
+#plot grouped bar charts
+
+ggplot(respondent_cnt, aes(fill=treatment, y=count, x=age.demographic, color=treatment)) + 
+    labs ( title = "Respondent Count by Age Group and Treatment",
+             x = "age group")+ 
+    geom_bar(position="dodge", alpha = 0.6, stat="identity")
+
+```
+
+
+```{r pressure, echo=FALSE}
+#mean scores by age group: pre-post
+scores_age <- setorder(d[ ,.(mean_score1 = mean(q12.score), mean_score2=mean(q25.score)), by = (age.demographic)])
+scores_age
+```
+```{r pressure, echo=FALSE}
+install.packages("cobalt")
+library("cobalt")
+
+install.packages("vtable")
+library(vtable)
+
+#covariate balance summary
+sumtable(d, group = "treatment", group.test = TRUE)
+
+differences <- d %>%
+  group_by(treatment, age.demographic) %>%
+  summarise(mean(q12.score, na.rm = TRUE))
+```
+```{r pressure, echo=FALSE}
+
+scores_treatment <- d[ ,.(pre_treat_scores = mean(q12.score), post_treat_scores=mean(q25.score)), by = (treatment)]
+
+scores_1 <- d[ ,.(score = mean(q12.score)), by = (treatment)]
+observation <- c("pre-treatment", "pre-treatment", "pre-treatment", "pre-treatment")
+final_scores_1 <- cbind(observation, scores_1)
+final_scores_1
+
+scores_2 <- d[ ,.(score = mean(q25.score)), by = (treatment)]
+observation <- c("post-treatment", "post-treatment", "post-treatment", "post-treatment")
+final_scores_2 <- cbind(observation, scores_2)
+final_scores_2 
+
+
+scores <- rbind(final_scores_1, final_scores_2)
+scores
+```
+
+
+```{r}
+# Treatment group (Positive) before treatment
+pos_pre <- scores_treatment[3,2]
+pos_pre
+
+# Treatment group (Positive) after treatment
+pos_post <- scores_treatment[3,3]
+pos_post
+
+# Treatment group (Negative) before treatment
+neg_pre <- scores_treatment[4,2]
+neg_pre
+
+# Treatment group (Negative) after treatment
+neg_post <- scores_treatment[4,3]
+neg_post
+
+# Treatment group (Negative) before treatment
+neutral_pre <- scores_treatment[2,2]
+neutral_pre
+
+# Treatment group (Negative) after treatment
+neutral_post <- scores_treatment[2,3]
+neutral_post
+
+# Control group (white noise) before treatment
+ctrl_pre <- scores_treatment[1,2]
+
+# Control group (white) after treatment
+ctrl_post <- scores_treatment[1,3]
+```
+```{r}
+
+ate_neutral_ctrl <- (neutral_post - neutral_pre) - (ctrl_post - ctrl_pre)
+ate_neutral_ctrl
+
+ate_neg_ctrl <- (neg_post - neg_pre) - (ctrl_post - ctrl_pre)
+ate_neg_ctrl
+
+ate_pos_ctrl <- (pos_post - pos_pre) - (ctrl_post - ctrl_pre)
+ate_pos_ctrl
+```
+```{r}
+
+# Calculate counterfactual outcome (positive)
+pos_counterfactual <- tibble(
+  observation = c("pre-treatment","post-treatment"), 
+  treatment = c("positive (counterfactual)","positive (counterfactual)"),
+  score = as.numeric(c(pos_pre, pos_pre-(ctrl_pre-ctrl_post))))
+
+pos_counterfactual
+
+# Calculate counterfactual outcome (neutral)
+neutral_counterfactual <- tibble(
+  observation = c("pre-treatment","post-treatment"), 
+  treatment = c("neutral (counterfactual)","neutral (counterfactual)"),
+  score = as.numeric(c(neutral_pre, neutral_pre-(ctrl_pre-ctrl_post))))
+
+neutral_counterfactual
+
+# Calculate counterfactual outcome (negative)
+neg_counterfactual <- tibble(
+  observation = c("pre-treatment","post-treatment"), 
+  treatment = c("negative (counterfactual)","negative (counterfactual)"),
+  score = as.numeric(c(neg_pre, neg_pre-(ctrl_pre-ctrl_post))))
+
+# Data points for treatment event
+intervention_pos <- tibble(
+    observation = c("intervention", "intervention", "intervention"),
+    treatment = c("positive", "control", "positive (counterfactual)"), 
+    score = c(13.805, 11.0175, 13.805)
+  ) 
+
+intervention_neutral <- tibble(
+    observation = c("intervention", "intervention", "intervention"),
+    treatment = c("neutral", "control", "neutral (counterfactual)"), 
+    score = c(10.39, 11.0175, 10.38)
+  ) 
+
+intervention_negative <- tibble(
+    observation = c("intervention", "intervention", "intervention"),
+    treatment = c("negative", "control", "negative (counterfactual)"), 
+    score = c(9.05, 11.0175, 9.051)
+  ) 
+
+#10.5, 10.38, 9.166667, 9.051
+#"neutral", "neutral (counterfactual)", "negative", "negative (counterfactual)"
+
+#Combine data (pos)
+scores_pos <- filter(scores, treatment == "positive" | treatment == "control")
+
+did_plotdata_pos <- bind_rows(scores_pos, 
+                          pos_counterfactual,
+                          intervention_pos
+                          )
+#combine data (neutral)
+scores_neutral <- filter(scores, treatment == "neutral" | treatment == "control")
+
+did_plotdata_neutral <- bind_rows(scores_neutral, 
+                          neutral_counterfactual,
+                          intervention_neutral
+                          )
+#combine data (negative)
+
+scores_negative <- filter(scores, treatment == "negative" | treatment == "control")
+
+did_plotdata_negative <- bind_rows(scores_negative, 
+                          neg_counterfactual,
+                          intervention_negative
+                          )
+
+
+# Combine data
+did_plotdata <- bind_rows(scores, 
+                          pos_counterfactual,
+                          neutral_counterfactual,
+                          neg_counterfactual,
+                          intervention_pos
+                          )
+
+did_plotdata
+```
+
+```{r}
+#pos did plot
+
+pos_did_plot <- did_plotdata_pos %>%
+  mutate(label = if_else(observation == "post-treatment", as.character(treatment), NA_character_)) %>%
+  ggplot(aes(x=observation,y=score, group=treatment)) +
+  scale_x_discrete(limits = c("pre-treatment", "intervention", "post-treatment"))+
+  geom_line(aes(color=treatment), size=1.2) +
+  geom_vline(xintercept = "intervention", linetype="dotted", 
+             color = "black", size=1.1) + 
+  scale_color_brewer(palette = "Accent") +
+  scale_y_continuous(limits = c(9, 17)) +
+  ggrepel::geom_label_repel(aes(label = label),
+                   nudge_x = 0.5, nudge_y = -0.5,
+                   na.rm = TRUE) +
+  guides(color="none") +
+  labs(x="", y="score (mean)") +
+  annotate(
+    "text",
+    x = "post-treatment",
+    y = 12,
+    label = "{Difference-in-Differences}",
+    angle = 90,
+    size = 3
+  )
+pos_did_plot
+```
+
+```{r}
+#neutral did plot
+
+neutral_did_plot <- did_plotdata_neutral %>%
+  mutate(label = if_else(observation == "post-treatment", as.character(treatment), NA_character_)) %>%
+  ggplot(aes(x=observation,y=score, group=treatment)) +
+  scale_x_discrete(limits = c("pre-treatment", "intervention", "post-treatment"))+
+  geom_line(aes(color=treatment), size=1.2) +
+  geom_vline(xintercept = "intervention", linetype="dotted", 
+             color = "black", size=1.1) + 
+  scale_color_brewer(palette = "Accent") +
+  scale_y_continuous(limits = c(9, 12)) +
+  ggrepel::geom_label_repel(aes(label = label),
+                   nudge_x = 0.5, nudge_y = -0.5,
+                   na.rm = TRUE) +
+  guides(color="none") +
+  labs(x="", y="score (mean)") +
+  annotate(
+    "text",
+    x = "post-treatment",
+    y = 10.5,
+    label = "{Difference-in-Differences}",
+    angle = 90,
+    size = 3
+  )
+
+neutral_did_plot
+```
+```{r}
+#neg did plot
+
+neg_did_plot <-did_plotdata_negative %>%
+  mutate(label = if_else(observation == "post-treatment", as.character(treatment), NA_character_)) %>%
+  ggplot(aes(x=observation,y=score, group=treatment)) +
+  scale_x_discrete(limits = c("pre-treatment", "intervention", "post-treatment"))+
+  geom_line(aes(color=treatment), size=1.2) +
+  geom_vline(xintercept = "intervention", linetype="dotted", 
+             color = "black", size=1.1) + 
+  scale_color_brewer(palette = "Accent") +
+  scale_y_continuous(limits = c(8, 12.5)) +
+  ggrepel::geom_label_repel(aes(label = label),
+                   nudge_x = 0.5, nudge_y = -0.5,
+                   na.rm = TRUE) +
+  guides(color="none") +
+  labs(x="", y="score (mean)") +
+  annotate(
+    "text",
+    x = "post-treatment",
+    y = 12,
+    label = "{Difference-in-Differences}",
+    angle = 90,
+    size = 3
+  )
+
+
+```
+
+
+```{r}
+library(cowplot)
+plot_grid(pos_did_plot, neutral_did_plot,  neg_did_plot, labels = "AUTO")
+
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
