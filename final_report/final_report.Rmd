@@ -6,7 +6,6 @@ output:
   bookdown::pdf_document2: 
     number_sections: yes
     fig_caption: yes
-  word_document: default
 ---
 
 
@@ -18,10 +17,12 @@ library(ggplot2)
 library(knitr)
 library(patchwork)
 library(stargazer)
-install.packages("vtable")
+library(dplyr)
 library(vtable)
 library(grid)
 library(gridExtra)
+library(tibble)
+library(cowplot)
 ```
 
 ```{r data clean up, include = FALSE}
@@ -312,7 +313,6 @@ neg_did_plot <-did_plotdata_negative %>%
     size = 3
   )
 
-library(cowplot)
 plot_grid(pos_did_plot, neutral_did_plot,  neg_did_plot, labels = "AUTO")
 ```
 
