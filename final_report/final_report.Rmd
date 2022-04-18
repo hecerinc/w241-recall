@@ -365,6 +365,13 @@ The plot above shows that across treatment and control groups with ample sample 
 knitr::include_graphics("flowchart.png")
 ```
 
+```{r, echo=FALSE}
+power.t.test(n= NULL, delta = 1, sd = 1, sig.level = 0.05, power = 0.8, type = "two.sample", alternative = "one.sided")
+```
+
+
+Prior to the experiment, we estimated a DID effect of 1 additional word correctly or incorrectly guessed between treatment and control with a standard deviation of 1, aiming for a power of 0.8. This would require at least 14 subjects in each treatment and control group to achieve.
+
 
 \newpage
 # Data Analysis
@@ -389,6 +396,62 @@ knitr::kable(dt)
 # why isn't the fig caption showing up??
 ```
 
+```{r, echo=FALSE, fig.cap = ""}
+#Creating a status column in the original data set based on the previous truth table
+d[, status := ifelse((q12.score != 0 & q25.score == 0 & finished == 0) | (finished == 1 & q12.score != 0 & q25.score == 0), "attritted", ifelse((q12.score == 0 & q25.score == 0) | (q12.score == 0 & q25.score != 0), "missing_data", "complete"))]
+
+#Showing attrition visually
+p_attrition1 <- ggplot(data, aes(x=status, fill = age.demographic)) +
+  geom_bar(position="stack")
+p_attrition2 <- ggplot(data, aes(x=status, fill = gender)) +
+  geom_bar(position="stack")
+grid.arrange(p_attrition1, p_attrition2, top = "Attrition by Age and Gender")
+
+```
+
+```{r}
+#Creating subsets
+#Simple subset by treatment
+data_att_simple = data[, .N, by='treatment']
+#Subset by treatment AND complete/attrition/missing data status
+data_att <- data[, .N, by=c('treatment', 'status')]
+setorder(data_att, cols = 'treatment')
+data_att
+#Even more subsetting including our age group blocking
+data_att_age <- data[, .N, by=c('age.demographic','treatment', 'status')]
+setorder(data_att_age, cols = 'age.demographic')
+data_att_age
+#Including attrition/missing data, equally distributed!
+res <- data_att_simple[, chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
+res
+#Taking into account attrition for entire experiment
+res2 <- data_att[status == 'complete', chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
+res2
+#Now by age group!
+#18-30
+res3 <- data_att_age[status == 'complete' & age.demographic == '18-30' , chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
+res3
+#30-40
+res4 <- data_att_age[status == 'complete' & age.demographic == '30-40' , chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
+res4
+#The rest give warning of "Chi-squared approximation may be incorrect"
+#Makes sense since we have much less data in these age groups compared to younger than 40
+#40-50
+res5 <- data_att_age[status == 'complete' & age.demographic == '40-50' , chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
+res5
+#50-60
+res6 <- data_att_age[status == 'complete' & age.demographic == '50-60' , chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
+res6
+#60+
+res7 <- data_att_age[status == 'complete' & age.demographic == '60+' , chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
+res7
+#Creating attrition table of p values
+data_att_p <- data.table(
+  age.demographic = c('18-30','30-40', '40-50', '50-60', '60+'),
+  p.value = c(res3$p.value,res4$p.value,res5$p.value,res6$p.value,res7$p.value)
+)
+data_att_p
+```
 
 \newpage
 # Results
