@@ -126,13 +126,13 @@ Cognitive outcomes in this experiment were primarily measured by the number of w
 
 ## Covariates
 
-```{r, echo = FALSE, "fig.cap="Plot of treatment distribution by Age Group"}
+```{r, echo = FALSE, "fig.cap="Plot of Treatment Distribution by Age Group"}
 p_attrition3 <- ggplot(data, aes(x=treatment, fill=age.demographic)) + geom_bar(position="stack") + ggtitle("Treatment Distribution by Age Group")
 p_attrition3
 ```
 The age range blocking and random assignment led to nearly even distributions of our multiple treatments and control. 
 
-```{r, echo = FALSE, fig.cap = ""}
+```{r, echo = FALSE, fig.cap = "Plots of Age Group Distributions By Covariates"}
 p1 <- ggplot(d, aes(x=gender, fill = age.demographic)) +
   geom_bar(position="stack")
 p1 <- p1 + theme(axis.text.x = element_text(angle = 25, hjust = 1))
@@ -143,8 +143,9 @@ p3 <- ggplot(d, aes(x=english.native, fill = age.demographic)) +
   geom_bar()
 grid.arrange(p1,p2,p3, ncol=2, top = "Covariate Distributions")
 ```
+Most of our survey participants fell within the age groups of 18-30 and 30-40. Between our covariates, highest education was the covariate with the most variance across participants. We then investigated the covariate balance across treatment groups in the age group blocks.
 
-```{r, echo = FALSE, fig.cap =""}
+```{r, echo = FALSE, fig.cap ="Plots of Highest Education Distribution by Treatment and Age Group"}
 p_distribution4 <- ggplot(d[age.demographic=="18-30",], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 18-30") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
 p_distribution5 <- ggplot(d[age.demographic=="30-40",], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 30-40") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
 p_distribution6 <- ggplot(d[age.demographic=="40-50",], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 40-50") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
@@ -153,7 +154,7 @@ p_distribution8 <- ggplot(d[age.demographic=="60+"], aes(x=treatment, fill=highe
 
 grid.arrange(p_distribution4,p_distribution5,p_distribution6,p_distribution7, p_distribution8, ncol=2, top = "Covariate Distributions by Age Group: Highest Education")
 ```
-
+The plot above shows that across treatment and control groups with ample sample size, education is evenly distributed within our experiment.
 
 \newpage
 # Power Analysis
