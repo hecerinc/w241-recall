@@ -18,10 +18,13 @@ library(ggplot2)
 library(knitr)
 library(patchwork)
 library(stargazer)
-install.packages("vtable")
-library(vtable)
+<<<<<<< HEAD
 library(grid)
 library(gridExtra)
+=======
+install.packages("vtable")
+library(vtable)
+>>>>>>> 1d98189f9e5b1d7e4ef6beef4d1e212fce2f2b53
 ```
 
 ```{r data clean up, include = FALSE}
@@ -318,21 +321,12 @@ plot_grid(pos_did_plot, neutral_did_plot,  neg_did_plot, labels = "AUTO")
 
 ## Covariates
 
-
-
-* VIZ: covariate balance check
-```{r}
-#count of respondents
-respondent_cnt <- setorder(d[ , count := .N, by = .(age =age.demographic, treatment)])
-respondent_cnt 
-
-#plot grouped bar charts
-
-ggplot(respondent_cnt, aes(fill=treatment, y=count, x=age.demographic, color=treatment)) + 
-    labs ( title = "Respondent Count by Age Group and Treatment",
-             x = "age group")+ 
-    geom_bar(position="dodge", alpha = 0.6, stat="identity")
+```{r, echo = FALSE, "fig.cap="Plot of Treatment Distribution by Age Group"}
+p_attrition3 <- ggplot(data, aes(x=treatment, fill=age.demographic)) + geom_bar(position="stack") + ggtitle("Treatment Distribution by Age Group")
+p_attrition3
 ```
+The age range blocking and random assignment led to nearly even distributions of our multiple treatments and control. 
+
 ```{r, echo = FALSE, fig.cap = "Plots of Age Group Distributions By Covariates"}
 p1 <- ggplot(d, aes(x=gender, fill = age.demographic)) +
   geom_bar(position="stack")
@@ -353,9 +347,26 @@ p_distribution6 <- ggplot(d[age.demographic=="40-50",], aes(x=treatment, fill=hi
 p_distribution7 <- ggplot(d[age.demographic=="50-60"], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 50-60") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
 p_distribution8 <- ggplot(d[age.demographic=="60+"], aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Age Group: 60+") + theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm"))
 
+<<<<<<< HEAD
 grid.arrange(p_distribution4,p_distribution5,p_distribution6,p_distribution7, p_distribution8, ncol=2, top = "Covariate Distributions by Age Group: Highest Education")
 ```
-The plot above shows that across treatment and control groups with ample sample size, education is evenly distributed within our experiment.
+The plot above shows that across treatment and control groups with ample sample size, education is evenly distributed within our experiment. 
+=======
+* VIZ: covariate balance check
+```{r}
+#count of respondents
+respondent_cnt <- setorder(d[ , count := .N, by = .(age =age.demographic, treatment)])
+respondent_cnt 
+
+#plot grouped bar charts
+
+ggplot(respondent_cnt, aes(fill=treatment, y=count, x=age.demographic, color=treatment)) + 
+    labs ( title = "Respondent Count by Age Group and Treatment",
+             x = "age group")+ 
+    geom_bar(position="dodge", alpha = 0.6, stat="identity")
+```
+
+>>>>>>> 1d98189f9e5b1d7e4ef6beef4d1e212fce2f2b53
 
 \newpage
 # Power Analysis
@@ -371,7 +382,6 @@ power.t.test(n= NULL, delta = 1, sd = 1, sig.level = 0.05, power = 0.8, type = "
 
 
 Prior to the experiment, we estimated a DID effect of 1 additional word correctly or incorrectly guessed between treatment and control with a standard deviation of 1, aiming for a power of 0.8. This would require at least 14 subjects in each treatment and control group to achieve.
-
 
 \newpage
 # Data Analysis
@@ -408,50 +418,7 @@ p_attrition2 <- ggplot(data, aes(x=status, fill = gender)) +
 grid.arrange(p_attrition1, p_attrition2, top = "Attrition by Age and Gender")
 
 ```
-
-```{r, echo = FALSE}
-#Creating subsets
-#Simple subset by treatment
-data_att_simple = data[, .N, by='treatment']
-#Subset by treatment AND complete/attrition/missing data status
-data_att <- data[, .N, by=c('treatment', 'status')]
-setorder(data_att, cols = 'treatment')
-#data_att
-#Even more subsetting including our age group blocking
-data_att_age <- data[, .N, by=c('age.demographic','treatment', 'status')]
-setorder(data_att_age, cols = 'age.demographic')
-#data_att_age
-#Including attrition/missing data, equally distributed!
-res <- data_att_simple[, chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
-#res
-#Taking into account attrition for entire experiment
-res2 <- data_att[status == 'complete', chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
-#res2
-#Now by age group!
-#18-30
-res3 <- data_att_age[status == 'complete' & age.demographic == '18-30' , chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
-#res3
-#30-40
-res4 <- data_att_age[status == 'complete' & age.demographic == '30-40' , chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
-#res4
-#The rest give warning of "Chi-squared approximation may be incorrect"
-#Makes sense since we have much less data in these age groups compared to younger than 40
-#40-50
-res5 <- data_att_age[status == 'complete' & age.demographic == '40-50' , chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
-#res5
-#50-60
-res6 <- data_att_age[status == 'complete' & age.demographic == '50-60' , chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
-#res6
-#60+
-res7 <- data_att_age[status == 'complete' & age.demographic == '60+' , chisq.test(N, p=c(1/4,1/4,1/4,1/4))]
-#res7
-#Creating attrition table of p values
-data_att_p <- data.table(
-  age.demographic = c('18-30','30-40', '40-50', '50-60', '60+'),
-  p.value = c(res3$p.value,res4$p.value,res5$p.value,res6$p.value,res7$p.value)
-)
-data_att_p
-```
+A
 
 \newpage
 # Results
