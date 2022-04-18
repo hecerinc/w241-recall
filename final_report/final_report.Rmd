@@ -18,6 +18,8 @@ library(ggplot2)
 library(knitr)
 library(patchwork)
 library(stargazer)
+install.packages("vtable")
+library(vtable)
 ```
 
 ```{r data clean up, include = FALSE}
@@ -83,7 +85,7 @@ knitr::include_graphics("design.png")
 ```
 
 
-Each participant was then prompted to complete a pre-treatment memory recognition task, where 30 words were shown for a period of one minute (Figure \@ref(fig:instructions)). Following exposure to this random list of words (sourced from random,org), participants were then given 30 seconds to select the words that they recognized from another list of 50 (Figure \@ref(fig:task)). The results from this task provided a baseline for cognitive performance. Within each block, participants were then randomly assigned to one of four groups–control, positive, neutral, and negative. After exposure to the treatment, participants were asked to complete another memory recognition task with a different set of 30 words. 
+Each participant was then prompted to complete a pre-treatment memory recognition task, where 30 words were shown for a period of one minute (Figure \@ref(fig:instructions)). Following exposure to this random list of words (sourced from random.org), participants were then given 30 seconds to select the words that they recognized from another list of 50 (Figure \@ref(fig:task)). The results from this task provided a baseline for cognitive performance. Within each block, participants were then randomly assigned to one of four groups–control, positive, neutral, and negative. After exposure to the treatment, participants were asked to complete another memory recognition task with a different set of 30 words. 
 
 
 ```{r instructions, echo=FALSE, fig.cap="Instructions in Survey", out.width = '75%', fig.align='center'}
@@ -112,23 +114,223 @@ knitr::include_graphics("data_def.png")
 
 Cognitive outcomes in this experiment were primarily measured by the number of words correctly recognized. While we also measured the length of time users took to complete this memory task, we did not expect many users to finish before the allotted 30 second time period.   
 
+## ROXO methodology
 
+Our experiment used a blocked difference-in-differences (DID) methodology, which can be illustrated with the following notation within each block:
 
+R O Y O Y
+R O Y X Y
+R O Y X Y
+R O Y X Y
 
-==EDA (Kavlakoglu)== 
+The DID plots below illustrate the subtle differences across each treatment compared to control and its counterfactual. 
 
-*add the ROXO methodology*
+```{r}
+#set up data for DID plots
+scores_treatment <- d[ ,.(pre_treat_scores = mean(q12.score), post_treat_scores=mean(q25.score)), by = (treatment)]
 
-* VIZ: ROXO graph
+scores_1 <- d[ ,.(score = mean(q12.score)), by = (treatment)]
+observation <- c("pre-treatment", "pre-treatment", "pre-treatment", "pre-treatment")
+final_scores_1 <- cbind(observation, scores_1)
+final_scores_1
 
+scores_2 <- d[ ,.(score = mean(q25.score)), by = (treatment)]
+observation <- c("post-treatment", "post-treatment", "post-treatment", "post-treatment")
+final_scores_2 <- cbind(observation, scores_2)
+final_scores_2 
+
+scores <- rbind(final_scores_1, final_scores_2)
+scores
+
+# Treatment group (Positive) before treatment
+pos_pre <- scores_treatment[3,2]
+pos_pre
+
+# Treatment group (Positive) after treatment
+pos_post <- scores_treatment[3,3]
+pos_post
+
+# Treatment group (Negative) before treatment
+neg_pre <- scores_treatment[4,2]
+neg_pre
+
+# Treatment group (Negative) after treatment
+neg_post <- scores_treatment[4,3]
+neg_post
+
+# Treatment group (Negative) before treatment
+neutral_pre <- scores_treatment[2,2]
+neutral_pre
+
+# Treatment group (Negative) after treatment
+neutral_post <- scores_treatment[2,3]
+neutral_post
+
+# Control group (white noise) before treatment
+ctrl_pre <- scores_treatment[1,2]
+
+# Control group (white) after treatment
+ctrl_post <- scores_treatment[1,3]
+
+# Calculate counterfactual outcome (positive)
+pos_counterfactual <- tibble(
+  observation = c("pre-treatment","post-treatment"), 
+  treatment = c("positive (counterfactual)","positive (counterfactual)"),
+  score = as.numeric(c(pos_pre, pos_pre-(ctrl_pre-ctrl_post))))
+
+# Calculate counterfactual outcome (neutral)
+neutral_counterfactual <- tibble(
+  observation = c("pre-treatment","post-treatment"), 
+  treatment = c("neutral (counterfactual)","neutral (counterfactual)"),
+  score = as.numeric(c(neutral_pre, neutral_pre-(ctrl_pre-ctrl_post))))
+
+# Calculate counterfactual outcome (negative)
+neg_counterfactual <- tibble(
+  observation = c("pre-treatment","post-treatment"), 
+  treatment = c("negative (counterfactual)","negative (counterfactual)"),
+  score = as.numeric(c(neg_pre, neg_pre-(ctrl_pre-ctrl_post))))
+
+# Data points for treatment event
+intervention_pos <- tibble(
+    observation = c("intervention", "intervention", "intervention"),
+    treatment = c("positive", "control", "positive (counterfactual)"), 
+    score = c(13.805, 11.0175, 13.805)
+  ) 
+
+intervention_neutral <- tibble(
+    observation = c("intervention", "intervention", "intervention"),
+    treatment = c("neutral", "control", "neutral (counterfactual)"), 
+    score = c(10.39, 11.0175, 10.38)
+  ) 
+
+intervention_negative <- tibble(
+    observation = c("intervention", "intervention", "intervention"),
+    treatment = c("negative", "control", "negative (counterfactual)"), 
+    score = c(9.05, 11.0175, 9.051)
+  ) 
+
+#Combine data (pos)
+scores_pos <- filter(scores, treatment == "positive" | treatment == "control")
+
+did_plotdata_pos <- bind_rows(scores_pos, 
+                          pos_counterfactual,
+                          intervention_pos
+                          )
+
+#combine data (neutral)
+scores_neutral <- filter(scores, treatment == "neutral" | treatment == "control")
+
+did_plotdata_neutral <- bind_rows(scores_neutral, 
+                          neutral_counterfactual,
+                          intervention_neutral
+                          )
+
+#combine data (negative)
+scores_negative <- filter(scores, treatment == "negative" | treatment == "control")
+
+did_plotdata_negative <- bind_rows(scores_negative, 
+                          neg_counterfactual,
+                          intervention_negative
+                          )
+```
+
+```{r}
+#pos did plot
+
+pos_did_plot <- did_plotdata_pos %>%
+  mutate(label = if_else(observation == "post-treatment", as.character(treatment), NA_character_)) %>%
+  ggplot(aes(x=observation,y=score, group=treatment)) +
+  scale_x_discrete(limits = c("pre-treatment", "intervention", "post-treatment"))+
+  geom_line(aes(color=treatment), size=1.2) +
+  geom_vline(xintercept = "intervention", linetype="dotted", 
+             color = "black", size=1.1) + 
+  scale_color_brewer(palette = "Accent") +
+  scale_y_continuous(limits = c(9, 17)) +
+  ggrepel::geom_label_repel(aes(label = label),
+                   nudge_x = 0.5, nudge_y = -0.5,
+                   na.rm = TRUE) +
+  guides(color="none") +
+  labs(x="", y="score (mean)") +
+  annotate(
+    "text",
+    x = "post-treatment",
+    y = 12,
+    label = "{Difference-in-Differences}",
+    angle = 90,
+    size = 3
+  )
+
+#neutral did plot
+
+neutral_did_plot <- did_plotdata_neutral %>%
+  mutate(label = if_else(observation == "post-treatment", as.character(treatment), NA_character_)) %>%
+  ggplot(aes(x=observation,y=score, group=treatment)) +
+  scale_x_discrete(limits = c("pre-treatment", "intervention", "post-treatment"))+
+  geom_line(aes(color=treatment), size=1.2) +
+  geom_vline(xintercept = "intervention", linetype="dotted", 
+             color = "black", size=1.1) + 
+  scale_color_brewer(palette = "Accent") +
+  scale_y_continuous(limits = c(9, 12)) +
+  ggrepel::geom_label_repel(aes(label = label),
+                   nudge_x = 0.5, nudge_y = -0.5,
+                   na.rm = TRUE) +
+  guides(color="none") +
+  labs(x="", y="score (mean)") +
+  annotate(
+    "text",
+    x = "post-treatment",
+    y = 10.5,
+    label = "{Difference-in-Differences}",
+    angle = 90,
+    size = 3
+  )
+
+#neg did plot
+
+neg_did_plot <-did_plotdata_negative %>%
+  mutate(label = if_else(observation == "post-treatment", as.character(treatment), NA_character_)) %>%
+  ggplot(aes(x=observation,y=score, group=treatment)) +
+  scale_x_discrete(limits = c("pre-treatment", "intervention", "post-treatment"))+
+  geom_line(aes(color=treatment), size=1.2) +
+  geom_vline(xintercept = "intervention", linetype="dotted", 
+             color = "black", size=1.1) + 
+  scale_color_brewer(palette = "Accent") +
+  scale_y_continuous(limits = c(8, 12.5)) +
+  ggrepel::geom_label_repel(aes(label = label),
+                   nudge_x = 0.5, nudge_y = -0.5,
+                   na.rm = TRUE) +
+  guides(color="none") +
+  labs(x="", y="score (mean)") +
+  annotate(
+    "text",
+    x = "post-treatment",
+    y = 12,
+    label = "{Difference-in-Differences}",
+    angle = 90,
+    size = 3
+  )
+
+library(cowplot)
+plot_grid(pos_did_plot, neutral_did_plot,  neg_did_plot, labels = "AUTO")
+```
 
 ## Covariates
 
 
 
 * VIZ: covariate balance check
+```{r}
+#count of respondents
+respondent_cnt <- setorder(d[ , count := .N, by = .(age =age.demographic, treatment)])
+respondent_cnt 
 
+#plot grouped bar charts
 
+ggplot(respondent_cnt, aes(fill=treatment, y=count, x=age.demographic, color=treatment)) + 
+    labs ( title = "Respondent Count by Age Group and Treatment",
+             x = "age group")+ 
+    geom_bar(position="dodge", alpha = 0.6, stat="identity")
+```
 
 
 \newpage
@@ -179,6 +381,8 @@ Additionally, the different treatments may have been more engaging than others. 
 We also acknowledge participants could have "gamed" the experiment by selecting every single word in the recall list. The survey did not tell the participant if their selection was correct or not, which we intended to disincentivize this behavior. However, our scoring methodology did not penalize incorrect answers, so this could have had unintended consequences in our analysis. However, when we reviewed the data and included a penalty for incorrect answers, there were very few instances where the penalized score differed from the simple count score. 
 
 In our survey design we also made one mistake, creating overlapping age groups for 30-40 and 40-50. So for participants aged 40 may have been confused and declined to participate, or chose one age group inconsistently (i.e. some 40 year olds chose the younger group and others chose the older). 
+
+Finally, the amount of time that we allotted to participants to complete the memory recognition task was likely problematic for our models where the task completion time was the outcome variable. Some participants reported that thirty seconds wasn't a sufficient amount of time to complete the task, and if the majority of participants felt this way, then this could have minimized a treatment effect within our results. Extending the task completion time in a future iteration would remove this limitation. 
 
 \newpage
 # Conclusion
