@@ -160,6 +160,7 @@ getShortTimeModel <- function(subset_groups = c('positive', 'control')) {
 }
 ```
 
+=======
 ```{r Short time model}
 m50.1 <- ddx[treatment %in% c('control', 'positive'), lm(completion.time ~ time*treatment)]
 m50.1$rse <- sqrt(diag(vcovHC(m50.1)))
@@ -230,5 +231,11 @@ stargazer(m53.1, m53.2, m53.3,
 			header=F
 		  )
 
+```
+
+```{r}
+#Comparing models
+anova(m1.1,m3.1)
+anova(m50.1,m51.1)
 ```
 
