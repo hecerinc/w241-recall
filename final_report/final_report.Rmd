@@ -6,7 +6,6 @@ output:
   bookdown::pdf_document2: 
     number_sections: yes
     fig_caption: yes
-  word_document: default
 ---
 
 
@@ -18,11 +17,18 @@ library(ggplot2)
 library(knitr)
 library(patchwork)
 library(stargazer)
-install.packages("vtable")
 library(vtable)
 library(grid)
 library(gridExtra)
+library(cowplot)
+library(tibble)
+library(dplyr)
 ```
+
+```{r knitr options, include=F}
+knitr::opts_chunk$set(dpi=300, tidy.opts=list(width.cutoff=40), tidy=T, echo=F)
+```
+
 
 ```{r data clean up, include = FALSE}
 load('../data/processed/survey_data_clean_20220410.RData')
@@ -120,10 +126,12 @@ Cognitive outcomes in this experiment were primarily measured by the number of w
 
 Our experiment used a blocked difference-in-differences (DID) methodology, which can be illustrated with the following notation within each block:
 
+```
 R O Y O Y
 R O Y X Y
 R O Y X Y
 R O Y X Y
+```
 
 The DID plots below illustrate the subtle differences across each treatment compared to control and its counterfactual. 
 
@@ -248,16 +256,14 @@ pos_did_plot <- did_plotdata_pos %>%
              color = "black", size=1.1) + 
   scale_color_brewer(palette = "Accent") +
   scale_y_continuous(limits = c(9, 17)) +
-  ggrepel::geom_label_repel(aes(label = label),
-                   nudge_x = 0.5, nudge_y = -0.5,
-                   na.rm = TRUE) +
-  guides(color="none") +
+ # ggrepel::geom_label_repel(aes(label = label), nudge_x = 0.5, nudge_y = -0.5, na.rm = TRUE) +
+#  guides(color="none") +
   labs(x="", y="score (mean)") +
   annotate(
     "text",
     x = "post-treatment",
     y = 12,
-    label = "{Difference-in-Differences}",
+    label = "",
     angle = 90,
     size = 3
   )
@@ -312,8 +318,8 @@ neg_did_plot <-did_plotdata_negative %>%
     size = 3
   )
 
-library(cowplot)
-plot_grid(pos_did_plot, neutral_did_plot,  neg_did_plot, labels = "AUTO")
+pos_did_plot / neutral_did_plot / neg_did_plot
+# plot_grid(pos_did_plot, neutral_did_plot,  neg_did_plot, labels = "AUTO")
 ```
 
 ## Covariates
@@ -383,7 +389,7 @@ Prior to the experiment, we estimated a DID effect of 1 additional word correctl
 
 In this experiment, attrition was defined as any individual who completed the first memory recognition task, but not the second one.
 
-```{r truth table, echo=FALSE, fig.cap="Data Definitions for Completion and Attrition"}
+```{r truth table, echo=FALSE, fig.cap="Data Definitions for Completion and Attrition",  fig.env='table'}
 
 dt <- data.frame( n = c("Missing Data", "Missing Data", "Attrition","Complete Data"),
                   r = c("No", "No", "Yes","Yes"),
@@ -401,9 +407,9 @@ knitr::kable(dt)
 d[, status := ifelse((q12.score != 0 & q25.score == 0 & finished == 0) | (finished == 1 & q12.score != 0 & q25.score == 0), "attritted", ifelse((q12.score == 0 & q25.score == 0) | (q12.score == 0 & q25.score != 0), "missing_data", "complete"))]
 
 #Showing attrition visually
-p_attrition1 <- ggplot(data, aes(x=age.demographic, fill = status)) +
+p_attrition1 <- ggplot(d, aes(x=age.demographic, fill = status)) +
   geom_bar(position="dodge")
-p_attrition2 <- ggplot(data, aes(x= treatment, fill = status)) +
+p_attrition2 <- ggplot(d, aes(x= treatment, fill = status)) +
   geom_bar(position="dodge")
 grid.arrange(p_attrition1, p_attrition2, top = "Attrition by Age and Treatment Group")
 
@@ -411,16 +417,16 @@ grid.arrange(p_attrition1, p_attrition2, top = "Attrition by Age and Treatment G
 
 Majority of participants completed the experiment fully, while there were several attritted participants in all treatment and control groups.
 
-```{r, echo = FALSE, fig.cap = "Attrition P-Value Table"}
+```{r, echo = FALSE, fig.cap = "Attrition P-Value Table", warning=F}
 #Creating subsets
 #Simple subset by treatment
-data_att_simple = data[, .N, by='treatment']
+data_att_simple = d[, .N, by='treatment']
 #Subset by treatment AND complete/attrition/missing data status
-data_att <- data[, .N, by=c('treatment', 'status')]
+data_att <- d[, .N, by=c('treatment', 'status')]
 setorder(data_att, cols = 'treatment')
 #data_att
 #Even more subsetting including our age group blocking
-data_att_age <- data[, .N, by=c('age.demographic','treatment', 'status')]
+data_att_age <- d[, .N, by=c('age.demographic','treatment', 'status')]
 setorder(data_att_age, cols = 'age.demographic')
 #data_att_age
 #Including attrition/missing data, equally distributed!
@@ -457,21 +463,195 @@ data_att_p
 
 We can see that in all treatment groups and the control group, even with the attritted participants removed, there is an even distribution of participants within the age group blocks.
 
+
 \newpage
+# Analysis
+
+
+For the data we have collected, we want to fit the following models on each of the outcome variables:
+
+==TODO: swap out b4 and b5 ==
+
+$$
+\begin{aligned}
+      \text{Completion time} &= \beta_0 + \beta_1 time + \beta_2 intervention + \beta_3 time*intervention + \epsilon \\
+      \text{Score} &= \beta_0 + \beta_1 time + \beta_2 intervention + \beta_3 time*intervention  + \epsilon \\
+      \text{Completion time} &= \beta_0 + \beta_1 time + \beta_2 intervention + \beta_3 time*intervention + \beta_4 \text{english native language} + \beta_5 \text{highest education} + \epsilon \\
+      \text{Score} &= \beta_0 + \beta_1 time + \beta_2 intervention + \beta_3 time*intervention +  \beta_4 \text{english native language} + \beta_5 \text{highest education degree} + \epsilon \\
+\end{aligned}
+$$
+
+Where we have added the **english as  native language** and **highest education degree** covariates to the longer models.
+
 # Results
 
-==HECTOR==
+```{r Prepare the data (gather it)}
+dd <- tidyr::gather(d, time, score, q12.score:q25.score)
+dd$time <- ifelse(dd$time == 'q12.score', 0, 1)
+dd <- data.table(dd)
+```
+
+
+## Score outcome models 
+
+### Short model
+
+```{r 1.1 Positive vs Control, results='asis'}
+# 1.1 Positive vs Control
+dd[, any_treatment := ifelse(treatment != 'control', 1, 0)]
+m1.0 <- dd[, lm(score ~ time*any_treatment)]
+m1.0$rse <- sqrt(diag(vcovHC(m1.0)))
+m1.1 <- dd[treatment %in% c('control', 'positive'), lm(score ~ time*treatment)]
+m1.1$rse <- sqrt(diag(vcovHC(m1.1)))
+m1.2 <- dd[treatment %in% c('control', 'negative'), lm(score ~ time*treatment)]
+m1.2$rse <- sqrt(diag(vcovHC(m1.2)))
+m1.3 <- dd[treatment %in% c('control', 'neutral'),  lm(score ~ time*treatment)]
+m1.3$rse <- sqrt(diag(vcovHC(m1.3)))
+stargazer(m1.0, m1.1, m1.2, m1.3, type='latex',
+		  dep.var.labels = 'Score (correct words remembered)',
+		  column.labels = c('Any treatment', 'Positive', 'Negative', 'Neutral'),
+		  title="Table 1. Score (correct words remembered) DID estimation",
+		  se=list(m1.0$rse, m1.1$rse, m1.2$rse, m1.3$rse),
+		  omit="^(any_treatment|time|treatmentpositive|treatmentnegative|treatmentneutral)$",
+		  covariate.labels=c(
+		  	'Any treatment',
+		  	'DID estimator (positive)',
+		  	'DID estimator (negative)',
+		  	'DID estimator (neutral)'
+		  ),
+		  header=F
+		  )
+```
+We have also fitted a model to compare people who were assigned _any treatment_ (i.e. an audio clip vs. the control which was white noise).
+
+### Covariated model
+
+
+```{r, results='asis'}
+m3.1 <- dd[treatment %in% c('control', 'positive'), lm(score ~ time*treatment + highest.education + english.native)]
+m3.1$rse <- sqrt(diag(vcovHC(m3.1)))
+m3.2 <- dd[treatment %in% c('control', 'negative'), lm(score ~ time*treatment + highest.education + english.native)]
+m3.2$rse <- sqrt(diag(vcovHC(m3.2)))
+m3.3 <- dd[treatment %in% c('control', 'neutral'),  lm(score ~ time*treatment + highest.education + english.native)]
+m3.3$rse <- sqrt(diag(vcovHC(m3.3)))
+stargazer(m3.1, m3.2, m3.3, type='latex',
+		  dep.var.labels = 'Score (correct words remembered)',
+		  column.labels = c('Positive', 'Negative', 'Neutral'),
+		  title="Table 2. Score (correct words remembered) DID estimation (covariated model)",
+		  se=list(m3.1$rse, m3.2$rse, m3.3$rse),
+		  omit="^(time|treatmentpositive|treatmentnegative|treatmentneutral)$|Other",
+		  covariate.labels=c(
+		  	'Bachelor\'s degree',
+		  	'High school diploma',
+		  	'Master\'s Degree',
+		  	'PhD/MD/JD',
+		  	'English as native language',
+		  	'DID estimator (positive)',
+		  	'DID estimator (negative)',
+		  	'DID estimator (neutral)'
+		  ),
+		  header=F
+		  )
+```
+
+
+
+As we can see from the model results, none of the difference-in-differences estimators produced a statistically significant effect. 
+In practical terms, this suggests that the treatment of the audio clips did not have any effect on the recall ability of the participants. It's interesting to note that we can't see an effect on either the individual treatments (negative, positive, neutral), nor the application of any treatment. 
+
+Though the underlying literature suggests that there should be an effect from the meditation one, according to ==INSERT REFERNCE HERE==, our analysis of the 5-minute intervention does not support this data. We do not make a statement either refuting or supporting the previous literature, however. In this case, given the relatively short duration of the treatment, we are probably unable to detect a treatment with the given dosage. Further replications of the experiment with longer doses of the treatments are recommended to be able to definitively assert one or another conclusion.
+
+
+## Completion time outcome
+
+```{r}
+ddx <- tidyr::gather(d, time, completion.time, pretask.time:posttask.time)
+ddx$time <- ifelse(ddx$time == 'pretask.time', 0, 1)
+ddx <- data.table(ddx)
+```
+
+
+### Short time model
+
+```{r Short time model, results='asis'}
+m50.1 <- ddx[treatment %in% c('control', 'positive'), lm(completion.time ~ time*treatment)]
+m50.1$rse <- sqrt(diag(vcovHC(m50.1)))
+m50.2 <- ddx[treatment %in% c('control', 'negative'), lm(completion.time ~ time*treatment)]
+m50.2$rse <- sqrt(diag(vcovHC(m50.2)))
+m50.3 <- ddx[treatment %in% c('control', 'neutral'),  lm(completion.time ~ time*treatment)]
+m50.3$rse <- sqrt(diag(vcovHC(m50.3)))
+stargazer(m50.1, m50.2, m50.3,
+		  type='latex',
+		  dep.var.labels = 'Completion time (secs)',
+		  column.labels = c('Positive', 'Negative', 'Neutral'),
+		  title="Table 3. Completion time covariated model",
+		  se=list(m50.1$rse, m50.2$rse, m50.3$rse),
+		  omit="^(time|treatmentpositive|treatmentnegative|treatmentneutral)$",
+		  covariate.labels=c(
+		  	'DID estimator (positive)',
+		  	'DID estimator (negative)',
+		  	'DID estimator (neutral)'
+		  ),
+		  header=F
+  )
+```
+
+Similarly for the time model, we can see there is no significant effect on the completion time. In fact, taking a look at the completion time distribution for our survey participants, we find that most participants (X % ADD PERCENTAGE HERE) utilized the full 30 seconds allotted to the time completion.
+
+```{r}
+dd[, hist( posttask.time)]
+```
+
+
+- Talk about why the time limit was probably a design flaw in the experiment
+
+
+### Covariated time model
+
+
+```{r Long time model, results='asis'}
+m53.1 <- ddx[treatment %in% c('control', 'positive'), lm(completion.time ~ time*treatment + highest.education + english.native)]
+m53.1$rse <- sqrt(diag(vcovHC(m53.1)))
+m53.2 <- ddx[treatment %in% c('control', 'negative'), lm(completion.time ~ time*treatment + highest.education + english.native)]
+m53.2$rse <- sqrt(diag(vcovHC(m53.2)))
+m53.3 <- ddx[treatment %in% c('control', 'neutral'),  lm(completion.time ~ time*treatment + highest.education + english.native)]
+m53.3$rse <- sqrt(diag(vcovHC(m53.3)))
+stargazer(m53.1, m53.2, m53.3,
+		  type='latex',
+		  se=list(m53.1$rse, m53.2$rse, m53.3$rse),
+		  dep.var.labels = 'Completion time (secs)',
+		  column.labels = c('Positive', 'Negative', 'Neutral'),
+			title="Table 4. Completion time covariated model",
+		  omit="^(time|treatmentpositive|treatmentnegative|treatmentneutral)$|Other",
+		  covariate.labels=c(
+		  	'Bachelor\'s degree',
+		  	'High school diploma',
+		  	'Master\'s Degree',
+		  	'PhD/MD/JD',
+		  	'English as native language',
+		  	'DID estimator (positive)',
+		  	'DID estimator (negative)',
+		  	'DID estimator (neutral)'
+		  ),
+			header=F
+		  )
+
+```
+
+Adding each of the 
+
+==UNDERPOWERDNESS==
 
 ## Limitations
 
 
-There are reasons to suspect that the assigned treatment influences outcomes for reasons other than the treatment that is actually delivered. Since we did not actively monitor users as they participate in this experiment we cannot be confident that every respondent engaged with the stimulus in the same manner. For example, participants may have multitasked during the audio treatment or they may have taken screenshots of the word list to memorize. 
+Since we did not actively monitor users as they participate in this experiment we cannot be confident that every respondent engaged with the stimulus in the same manner. For example, participants may have multitasked during the audio treatment or they may have taken screenshots of the word list to memorize. 
 
-Additionally, the different treatments may have been more engaging than others. For example, it may be harder for a participant to focus on a white noise control for a five minute duration, causing more users in this group to attrit. 
+Additionally, the different treatments may have been more engaging than others. ==TODO: revise== For example, it may be harder for a participant to focus on a white noise control for a five minute duration, causing more users in this group to attrit. 
 
-We also acknowledge participants could have "gamed" the experiment by selecting every single word in the recall list. The survey did not tell the participant if their selection was correct or not, which we intended to disincentivize this behavior. However, our scoring methodology did not penalize incorrect answers, so this could have had unintended consequences in our analysis. However, when we reviewed the data and included a penalty for incorrect answers, there were very few instances where the penalized score differed from the simple count score. 
+We also acknowledge participants could have "gamed" the experiment by selecting every single word in the recall list. The survey did not tell the participant if their selection was correct or not, which we intended to disincentivize this behavior. Our scoring methodology did not penalize incorrect answers, so this could have had unintended consequences in our analysis. However, when we reviewed the data and included a penalty for incorrect answers, there were very few instances where the penalized score differed from the simple count score. 
 
-In our survey design we also made one mistake, creating overlapping age groups for 30-40 and 40-50. So for participants aged 40 may have been confused and declined to participate, or chose one age group inconsistently (i.e. some 40 year olds chose the younger group and others chose the older). 
+In our survey design we also made one mistake, creating overlapping age groups (e.g. 30-40 and 40-50). ==TODO: revise== So for participants aged 40 may have been confused and declined to participate, or chose one age group inconsistently (i.e. some 40 year olds chose the younger group and others chose the older). 
 
 Finally, the amount of time that we allotted to participants to complete the memory recognition task was likely problematic for our models where the task completion time was the outcome variable. Some participants reported that thirty seconds wasn't a sufficient amount of time to complete the task, and if the majority of participants felt this way, then this could have minimized a treatment effect within our results. Extending the task completion time in a future iteration would remove this limitation. 
 

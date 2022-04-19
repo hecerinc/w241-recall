@@ -38,45 +38,31 @@ d[is.na(posttask.time),]
 d <- d[!is.na(posttask.time),]
 ```
 
-```{r} 
-getDIDModel <- function(subset_groups  = c('positive', 'control')) {
-	d1 <- d[treatment %in% subset_groups, ]
-	d1.q1  <- d1[, .(treatment, score=q12.score, time=0)]
-	d1.q25 <- d1[, .(treatment, score=q25.score, time=1)]
-	d1.both <- rbind(d1.q1, d1.q25)
-	return(d1.both[, lm(score ~ time + treatment + time*treatment)])
-}
+```{r}
+dd <- tidyr::gather(d, time, score, q12.score:q25.score)
+dd$time <- ifelse(dd$time == 'q12.score', 0, 1)
+dd <- data.table(dd)
 ```
+
 
 
 ## 1. Estimate the simple (short) DID model
 
 ```{r 1.1 Positive vs Control}
 # 1.1 Positive vs Control
-m1.1 <- getDIDModel(c('positive', 'control'))
-summary(m1.1)
-```
-
-
-```{r 1.2 Neutral vs Control}
-# 1.2 Neutral vs Control
-m1.2 <- getDIDModel(c('neutral', 'control'))
-summary(m1.2)
-```
-
-
-```{r 1.3 Negative vs Control}
-# 1.3 Negative vs Control
-m1.3 <- getDIDModel(c('negative', 'control'))
-summary(m1.3)
-stargazer(m1.1, m1.3, m1.2, type='text',
+m1.1 <- dd[treatment %in% c('control', 'positive'), lm(score ~ time*treatment)]
+m1.1$rse <- sqrt(diag(vcovHC(m1.1)))
+m1.2 <- dd[treatment %in% c('control', 'negative'), lm(score ~ time*treatment)]
+m1.2$rse <- sqrt(diag(vcovHC(m1.2)))
+m1.3 <- dd[treatment %in% c('control', 'neutral'),  lm(score ~ time*treatment)]
+m1.3$rse <- sqrt(diag(vcovHC(m1.3)))
+stargazer(m1.1, m1.2, m1.3, type='text',
 		  dep.var.labels = 'Score (correct words remembered)',
 		  column.labels = c('Positive', 'Negative', 'Neutral'),
 		  title="Table 1. Score (correct words remembered) DID estimation",
-		  se=list(m3.1$rse, m3.2$rse, m3.3$rse),
+		  se=list(m1.1$rse, m1.2$rse, m1.3$rse),
 		  omit="^(time|treatmentpositive|treatmentnegative|treatmentneutral)$",
 		  covariate.labels=c(
-		  	'Time',
 		  	'DID estimator (positive)',
 		  	'DID estimator (negative)',
 		  	'DID estimator (neutral)'
@@ -85,33 +71,9 @@ stargazer(m1.1, m1.3, m1.2, type='text',
 		  )
 ```
 
-## 2. Blocked model
 
-```{r}
-getBlockedModel <- function(subset_groups = c('control', 'positive')) {
-	d1 <- d[treatment %in% subset_groups, ]
-	d1.q1  <- d1[, .(treatment, age.demographic, score=q12.score, time=0)]
-	d1.q25 <- d1[, .(treatment, age.demographic, score=q25.score, time=1)]
-	d1.both <- rbind(d1.q1, d1.q25)
-	return(d1.both[, lm(score ~ time*treatment + age.demographic)])
-}
-```
+## 2. Covariate (long) model
 
-```{r 2. Run the block models}
-m2.1 <- getBlockedModel(c('control', 'positive'))
-m2.2 <- getBlockedModel(c('control', 'neutral'))
-m2.3 <- getBlockedModel(c('control', 'negative'))
-stargazer(m2.1, m2.2, m2.3, type='text')
-```
-
-
-## 3. Covariate (long) model
-
-```{r}
-dd <- tidyr::gather(d, time, score, q12.score:q25.score)
-dd$time <- ifelse(dd$time == 'q12.score', 0, 1)
-dd <- data.table(dd)
-```
 
 ```{r}
 m3.1 <- dd[treatment %in% c('control', 'positive'), lm(score ~ time*treatment + highest.education + english.native)]
@@ -151,16 +113,12 @@ $$
 # Run on time outcome variable
 
 ```{r}
-getShortTimeModel <- function(subset_groups = c('positive', 'control')) {
-	d1 <- d[treatment %in% subset_groups, ]
-	d1.pretask  <- d1[, .(treatment, Y=pretask.time, time=0)]
-	d1.posttask <- d1[, .(treatment, Y=posttask.time, time=1)]
-	d1.both <- rbind(d1.pretask, d1.posttask)
-	return(d1.both[, lm(Y ~ time*treatment)])
-}
+ddx <- tidyr::gather(d, time, completion.time, pretask.time:posttask.time)
+ddx$time <- ifelse(ddx$time == 'pretask.time', 0, 1)
+ddx <- data.table(ddx)
 ```
 
-=======
+
 ```{r Short time model}
 m50.1 <- ddx[treatment %in% c('control', 'positive'), lm(completion.time ~ time*treatment)]
 m50.1$rse <- sqrt(diag(vcovHC(m50.1)))
@@ -187,23 +145,8 @@ stargazer(m50.1, m50.2, m50.3,
 
 ## Run longer model
 
-```{r}
-getLongTimeModel <- function(subset_groups = c('positive', 'control')) {
-	d1 <- d[treatment %in% subset_groups, ]
-	d1.pretask  <- d1[, .(treatment, Y=pretask.time, time=0, age.demographic)]
-	d1.posttask <- d1[, .(treatment, Y=posttask.time, time=1, age.demographic)]
-	d1.both <- rbind(d1.pretask, d1.posttask)
-	return(d1.both[, lm(Y ~ time*treatment + age.demographic)])
-}
-dd[]
-```
-
-
 
 ```{r Long time model}
-ddx <- tidyr::gather(d, time, completion.time, pretask.time:posttask.time)
-ddx$time <- ifelse(ddx$time == 'pretask.time', 0, 1)
-ddx <- data.table(ddx)
 m53.1 <- ddx[treatment %in% c('control', 'positive'), lm(completion.time ~ time*treatment + highest.education + english.native)]
 m53.1$rse <- sqrt(diag(vcovHC(m53.1)))
 m53.2 <- ddx[treatment %in% c('control', 'negative'), lm(completion.time ~ time*treatment + highest.education + english.native)]
@@ -213,7 +156,6 @@ m53.3$rse <- sqrt(diag(vcovHC(m53.3)))
 stargazer(m53.1, m53.2, m53.3,
 		  type='text',
 		  se=list(m53.1$rse, m53.2$rse, m53.3$rse),
-#		  covariate.labels = c(),
 		  dep.var.labels = 'Completion time (secs)',
 		  column.labels = c('Positive', 'Negative', 'Neutral'),
 			title="Table 4. Completion time covariated model",
