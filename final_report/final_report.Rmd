@@ -20,7 +20,6 @@ library(stargazer)
 library(vtable)
 library(grid)
 library(gridExtra)
-library(cowplot)
 library(tibble)
 library(dplyr)
 ```
@@ -137,50 +136,34 @@ The DID plots below illustrate the subtle differences across each treatment comp
 
 ```{r}
 #set up data for DID plots
-scores_treatment <- d[ ,.(pre_treat_scores = mean(q12.score), post_treat_scores=mean(q25.score)), by = (treatment)]
-
-scores_1 <- d[ ,.(score = mean(q12.score)), by = (treatment)]
-observation <- c("pre-treatment", "pre-treatment", "pre-treatment", "pre-treatment")
-final_scores_1 <- cbind(observation, scores_1)
-final_scores_1
-
-scores_2 <- d[ ,.(score = mean(q25.score)), by = (treatment)]
-observation <- c("post-treatment", "post-treatment", "post-treatment", "post-treatment")
-final_scores_2 <- cbind(observation, scores_2)
-final_scores_2 
-
-scores <- rbind(final_scores_1, final_scores_2)
-scores
+dt <- tidyr::gather(d, observation, score, q12.score:q25.score)
+dt$observation <- ifelse(dt$observation == 'q12.score', "post-treatment", "pre-treatment")
+dt <- data.table(dt)
+scores <- dt[, .(score = mean(score)), by = list(observation, treatment)] 
 
 # Treatment group (Positive) before treatment
-pos_pre <- scores_treatment[3,2]
-pos_pre
+pos_pre <- scores[treatment == "positive" & observation == "pre-treatment", score]
 
 # Treatment group (Positive) after treatment
-pos_post <- scores_treatment[3,3]
-pos_post
+pos_post <- scores[treatment == "positive" & observation == "post-treatment", score]
 
 # Treatment group (Negative) before treatment
-neg_pre <- scores_treatment[4,2]
-neg_pre
+neg_pre <- scores[treatment == "negative" & observation == "pre-treatment", score]
 
 # Treatment group (Negative) after treatment
-neg_post <- scores_treatment[4,3]
-neg_post
+neg_post <- scores[treatment == "negative" & observation == "post-treatment", score]
 
 # Treatment group (Negative) before treatment
-neutral_pre <- scores_treatment[2,2]
-neutral_pre
+neutral_pre <- scores[treatment == "neutral" & observation == "pre-treatment", score]
 
 # Treatment group (Negative) after treatment
-neutral_post <- scores_treatment[2,3]
-neutral_post
+neutral_post <- scores[treatment == "neutral" & observation == "post-treatment", score]
 
 # Control group (white noise) before treatment
-ctrl_pre <- scores_treatment[1,2]
+ctrl_pre <- scores[treatment == "control" & observation == "pre-treatment", score]
 
 # Control group (white) after treatment
-ctrl_post <- scores_treatment[1,3]
+ctrl_post <- scores[treatment == "control" & observation == "post-treatment", score]
 
 # Calculate counterfactual outcome (positive)
 pos_counterfactual <- tibble(
@@ -255,17 +238,15 @@ pos_did_plot <- did_plotdata_pos %>%
   geom_vline(xintercept = "intervention", linetype="dotted", 
              color = "black", size=1.1) + 
   scale_color_brewer(palette = "Accent") +
-  scale_y_continuous(limits = c(9, 17)) +
- # ggrepel::geom_label_repel(aes(label = label), nudge_x = 0.5, nudge_y = -0.5, na.rm = TRUE) +
-#  guides(color="none") +
-  labs(x="", y="score (mean)") +
+  scale_y_continuous(limits = c(9, 16)) +
+  labs(x="", y="score (mean)", subtitle = "DID plot: Positive Treatment vs Control") +
   annotate(
     "text",
     x = "post-treatment",
-    y = 12,
-    label = "",
+    y = 12.2,
+    label = "{Difference-in-Differences}",
     angle = 90,
-    size = 3
+    size = 2
   )
 
 #neutral did plot
@@ -279,18 +260,14 @@ neutral_did_plot <- did_plotdata_neutral %>%
              color = "black", size=1.1) + 
   scale_color_brewer(palette = "Accent") +
   scale_y_continuous(limits = c(9, 12)) +
-  ggrepel::geom_label_repel(aes(label = label),
-                   nudge_x = 0.5, nudge_y = -0.5,
-                   na.rm = TRUE) +
-  guides(color="none") +
-  labs(x="", y="score (mean)") +
+  labs(x="", y="score (mean)", subtitle = "DID plot: Neutral Treatment vs Control") +
   annotate(
     "text",
     x = "post-treatment",
     y = 10.5,
     label = "{Difference-in-Differences}",
     angle = 90,
-    size = 3
+    size = 2
   )
 
 #neg did plot
@@ -303,23 +280,18 @@ neg_did_plot <-did_plotdata_negative %>%
   geom_vline(xintercept = "intervention", linetype="dotted", 
              color = "black", size=1.1) + 
   scale_color_brewer(palette = "Accent") +
-  scale_y_continuous(limits = c(8, 12.5)) +
-  ggrepel::geom_label_repel(aes(label = label),
-                   nudge_x = 0.5, nudge_y = -0.5,
-                   na.rm = TRUE) +
-  guides(color="none") +
-  labs(x="", y="score (mean)") +
+  scale_y_continuous(limits = c(7, 13)) +
+  labs(x="", y="score (mean)", subtitle = "DID plot: Negative Treatment vs Control") +
   annotate(
     "text",
     x = "post-treatment",
-    y = 12,
+    y = 10,
     label = "{Difference-in-Differences}",
     angle = 90,
-    size = 3
+    size = 2
   )
 
 pos_did_plot / neutral_did_plot / neg_did_plot
-# plot_grid(pos_did_plot, neutral_did_plot,  neg_did_plot, labels = "AUTO")
 ```
 
 ## Covariates
@@ -660,3 +632,58 @@ Finally, the amount of time that we allotted to participants to complete the mem
 
 \newpage
 # References
+
+@article{R-base,
+  title = {Mindfulness training improves working memory capacity and GRE performance while reducing mind wandering},
+  author = {{Michael D Mrazek, Michael S Franklin, Dawa Tarchin Phillips, Benjamin Baird, Jonathan W Schooler}},
+  organization = {Department of Psychological and Brain Sciences},
+  address = {University of California, Santa Barbara, CA 93106, USA.},
+  year = {2013},
+  url = {https://pubmed.ncbi.nlm.nih.gov/23538911/},
+}
+
+@article{BASSO2019208,
+title = {Brief, daily meditation enhances attention, memory, mood, and emotional regulation in non-experienced meditators},
+journal = {Behavioural Brain Research},
+volume = {356},
+pages = {208-220},
+year = {2019},
+issn = {0166-4328},
+doi = {https://doi.org/10.1016/j.bbr.2018.08.023},
+url = {https://www.sciencedirect.com/science/article/pii/S016643281830322X},
+author = {Julia C. Basso and Alexandra McHale and Victoria Ende and Douglas J. Oberlin and Wendy A. Suzuki}
+}
+
+@article{POUTVAARA201893,
+title = {Shocking news and cognitive performance},
+journal = {European Journal of Political Economy},
+volume = {51},
+pages = {93-106},
+year = {2018},
+issn = {0176-2680},
+doi = {https://doi.org/10.1016/j.ejpoleco.2017.03.006},
+url = {https://www.sciencedirect.com/science/article/pii/S0176268016301768},
+author = {Panu Poutvaara and Olli Ropponen}
+}
+
+@article{doi:10.1177/0091415017729684,
+author = {Caroline Deal and Ryan Bogdan and J. Phil Miller and Tom Rodebaugh and Charlene Caburnay and Mike Yingling and Tammy Hershey and Julia Schweiger and Eric J. Lenze},
+title ={Effects of Cable News Watching on Older Adults’ Physiological and Self-Reported Stress and Cognitive Function},
+journal = {The International Journal of Aging and Human Development},
+volume = {87},
+number = {2},
+pages = {111-123},
+year = {2018},
+doi = {10.1177/0091415017729684},
+    note ={PMID: 29139320},
+URL = { 
+        https://doi.org/10.1177/0091415017729684}
+}
+
+@article{R-base,
+  title = {Association of childhood trauma with cognitive function in healthy adults: a pilot study},
+  author = {{Majer, M., Nater, U.M., Lin, JM.S. et al.}},
+  organization = {BMC Neurol 10},
+  year = {2010},
+  url = {https://doi.org/10.1186/1471-2377-10-61},
+}
