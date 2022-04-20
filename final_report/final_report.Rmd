@@ -609,11 +609,11 @@ Adding each of the
 
 Since we did not actively monitor users as they participate in this experiment we cannot be confident that every respondent engaged with the stimulus in the same manner. For example, participants may have multitasked during the audio treatment or they may have taken screenshots of the word list to memorize. 
 
-Additionally, the different treatments may have been more engaging than others. ==TODO: revise== For example, it may be harder for a participant to focus on a white noise control for a five minute duration, causing more users in this group to attrit. 
+Additionally, the different treatments may have been more engaging than others. For example, it may be harder for a participant to focus on a white noise control for a five minute duration, causing more users in this group to attrit. We did see 6 participants in the control group attrited and 2 partcipants in the neutral group attrited, indicating there potentially was a higher likelihood to attrit if assigned to control.
 
 We also acknowledge participants could have "gamed" the experiment by selecting every single word in the recall list. The survey did not tell the participant if their selection was correct or not, which we intended to disincentivize this behavior. Our scoring methodology did not penalize incorrect answers, so this could have had unintended consequences in our analysis. However, when we reviewed the data and included a penalty for incorrect answers, there were very few instances where the penalized score differed from the simple count score. 
 
-In our survey design we also made one mistake, creating overlapping age groups (e.g. 30-40 and 40-50). This would have impacted a total of 
+In our survey design we also made one mistake, creating overlapping age groups (e.g. 30-40 and 40-50). This would have impacted a total of four distinct ages, 30, 40, 50, and 60. We did not collect the precise age of participants, but we do know that if our participant age range was conservatively ages 18-65 years old, only 4 ages of the 47 total ages would have been impacted. We don't feel this error invalidates our results. 
 
 Finally, the amount of time that we allotted to participants to complete the memory recognition task was likely problematic for our models where the task completion time was the outcome variable. Some participants reported that thirty seconds wasn't a sufficient amount of time to complete the task, and if the majority of participants felt this way, then this could have minimized a treatment effect within our results. Extending the task completion time in a future iteration would remove this limitation. 
 
