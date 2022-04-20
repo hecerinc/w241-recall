@@ -47,6 +47,7 @@ d[is.na(posttask.time),]
 d <- d[!is.na(posttask.time),]
 # Let's set the bachelor's degree to be the omitted category for the models
 d$highest.education <- relevel(d$highest.education, ref="Bachelor's degree")
+d[, any.treatment := ifelse(treatment != 'control', 1, 0)]
 ```
 
 
@@ -285,7 +286,7 @@ neg_did_plot <- did_plotdata_negative %>%
     size = 2
   )
 
-pos_did_plot / neutral_did_plot / neg_did_plot 
+pos_did_plot / neutral_did_plot / neg_did_plot
 ```
 
 ## Covariates
@@ -342,6 +343,13 @@ p_distribution_all + facet_grid(rows = vars(age.demographic), scales = "free_y")
 
 The plot above shows that across treatment and control groups with ample sample size, education is evenly distributed within our experiment.
 
+```{r}
+co.model1 <- d[, lm(any.treatment ~ 1)]
+co.model2 <- d[, lm(any.treatment ~ highest.education + english.native)]
+anova(co.model1, co.model2, test='F')
+```
+Performing an F-test on the covariates shows that there is no predictability in treatment assignment from the covariates (p-value of .3958).
+
 \newpage
 
 # Power Analysis
@@ -351,7 +359,7 @@ power.t.test(n= NULL, delta = 1, sd = 1, sig.level = 0.05, power = 0.8, type = "
 ```
 
 
-Prior to the experiment, we estimated a DID effect of 1 additional word correctly or incorrectly guessed between treatment and control with a standard deviation of 1, aiming for a power of 0.8. This would require at least 14 subjects in each treatment and control group to achieve.
+Prior to the experiment, we estimated a DID effect of 1 additional word correctly or incorrectly guessed between treatment and control with a standard deviation of 1, aiming for a power of 80%. As can be seen from the calculation, this would require at least 14 subjects in each treatment and control group to achieve.
 
 # Data Analysis
 
@@ -406,6 +414,7 @@ knitr::include_graphics("flowchart.png")
 ```
 
 \newpage
+
 # Analysis
 
 
@@ -420,7 +429,7 @@ For the data we have collected, we want to fit the following models on each of t
 
 \begin{equation}
     \begin{aligned}
-      \text{Score} = \beta_0 + \beta_1 time + \beta_2 intervention + \beta_3 time*intervention \\ 
+      \text{Score} = \beta_0 + \beta_1 time + \beta_2 intervention + \beta_3 time*intervention \\
       +  \beta_4 \text{highest education} + \beta_5 \text{english native language} + \epsilon
   \end{aligned}
 \end{equation}
@@ -448,14 +457,15 @@ dd <- data.table(dd)
 ```
 
 
+
+
 ## Score outcome models
 
 ### Short model
 
 ```{r 1.1 Positive vs Control, results='asis'}
 # 1.1 Positive vs Control
-dd[, any_treatment := ifelse(treatment != 'control', 1, 0)]
-m1.0 <- dd[, lm(score ~ time*any_treatment)]
+m1.0 <- dd[, lm(score ~ time*any.treatment)]
 m1.0$rse <- sqrt(diag(vcovHC(m1.0)))
 m1.1 <- dd[treatment %in% c('control', 'positive'), lm(score ~ time*treatment)]
 m1.1$rse <- sqrt(diag(vcovHC(m1.1)))
@@ -469,7 +479,7 @@ stargazer(m1.0, m1.1, m1.2, m1.3, type='latex',
 		  label = "tab:regression1",
 		  title="Score (correct words remembered) DID estimation",
 		  se=list(m1.0$rse, m1.1$rse, m1.2$rse, m1.3$rse),
-		  omit="^(any_treatment|time|treatmentpositive|treatmentnegative|treatmentneutral)$",
+		  omit="^(any.treatment|time|treatmentpositive|treatmentnegative|treatmentneutral)$",
 		  covariate.labels=c(
 		  	'Any treatment',
 		  	'DID estimator (positive)',
@@ -514,10 +524,16 @@ stargazer(m3.1, m3.2, m3.3, type='latex',
 ```
 
 
-As can be observed from the model results, none of the difference-in-differences estimators produced a statistically significant effect. 
-In practical terms, this suggests that the treatment of the audio clips did not have any effect on the recall ability of the participants. It's interesting to note that we cannot see an effect on either the individual treatments (negative, positive, neutral), nor the application of any treatment. 
+As can be observed from the model results, none of the difference-in-differences estimators produced a statistically significant effect.
+In practical terms, this suggests that the treatment of the audio clips did not have any effect on the recall ability of the participants. It's interesting to note that we cannot see an effect on either the individual treatments (negative, positive, neutral), nor the application of any treatment.
 
-Adding the education and English as a native language covariate also does not improve the estimates (we disregard the associate degree's statistically significant coefficient for the negative model as noise, as there were no participants assigned to that intersection (see Table \@ref(tab:assignmentxtreatment))), and in fact, paradoxically decreases the precision of the estimates. ==TODO: ADD REASONING AS TO WHY==
+Adding the education and English as a native language covariate also does not improve the estimates (we disregard the associate degree's statistically significant coefficient for the negative model as noise, as there were no participants assigned to that intersection (see Table \@ref(tab:assignmentxtreatment))), and in fact, paradoxically decreases the precision of the estimates.
+
+```{r}
+# TODO: Actually, I ran these models without the english.native or without the highest.education covariates and the standard errors still jump o.O
+```
+
+One possible reason for this is the fact that we have a significant class imbalance for the *English as a native language* covariate. Since our recruitment was mainly done in the U.S., most of our survey respondents are English native speakers. Additionally, the increase in standard errors (robust std. errors used here) could hint at a correlation between our covariates. `r # how would we develop this?`
 
 Though the underlying literature suggests that there should be an effect from the meditation one, according to [@Mrazek], our analysis of the 5-minute intervention does not support this data. We do not make a statement either refuting or supporting the previous literature, however. In this case, given the relatively short duration of the treatment, we are probably unable to detect a treatment with the given dosage. Further replications of the experiment with longer doses of the treatments are recommended to be able to definitively assert one or another conclusion.
 
