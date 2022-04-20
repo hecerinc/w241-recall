@@ -17,6 +17,7 @@ install.packages("WeightIt")
 install.packages("mlogit")
 library(mlogit)
 library("WeightIt")
+library(stargazer)
 ```
 
 ```{r}
@@ -101,6 +102,21 @@ p2 <- p2 + theme(axis.text.x = element_text(angle = 30, hjust = 1))
 p3 <- ggplot(data, aes(x=english.native, fill = age.demographic)) +
   geom_bar()
 grid.arrange(p1,p2,p3, ncol=2, top = "Covariate Distributions")
+```
+
+```{r, echo= FALSE}
+#Attempt at clean summary/stargazer output of initial data
+
+stargazer(d, type="text")
+
+options(na.action = "na.pass")  # so that we keep missing values in the data
+X <- model.matrix(~ age.demographic + gender + highest.education - 1, data = d)
+X.df <- data.frame(X)  # stargazer only does summary tables of data.frame objects
+names(X) <- colnames(X)
+stargazer(X.df, type = "text")
+
+summary(d[, c("age.demographic","gender","highest.education", "english.native")])
+
 ```
 
 ```{r}
