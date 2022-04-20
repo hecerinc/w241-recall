@@ -58,13 +58,13 @@ d <- d[!is.na(posttask.time),]
 
 # Introduction
 
-In this paper, we explore the impact of four audio stimuli of varying emotional effect on cognitive function. More specifically, does negative audio stimuli impair cognitive performance compared to positive and neutral ones? Using a difference-in-differences (`DID`) experiment design in Qualtrics, participants completed a baseline memorization task, then were randomly assigned to a stimuli and asked to complete a second memorization task after. 
+In this paper, we explore the impact of four audio stimuli of varying emotional effect on cognitive function. More specifically, does negative audio stimuli impair cognitive performance compared to positive and neutral ones? Using a difference-in-differences (`DID`) experiment design in Qualtrics, participants completed a baseline memorization task, then they were randomly assigned to a treatment group and asked to complete a second memorization task. 
 
-We found that there was no statistically significant effect of negative stimuli on cognitive function. We acknowledge as well that the negative stimuli used in this experiment may not have been strong enough to create a treatment effect, and also that treatment may need to be repeated over time to detect an effect. 
+We found that there was no statistically significant effect of negative stimuli on cognitive function. We acknowledge as well that the negative stimuli used in this experiment may not have been strong enough to create a treatment effect and that the treatment may have needed to be repeated over time to detect a significant effect. 
 
 ## Prior Research
 
-Previous studies have tested the impact of various audio content with varying results. For example, when we explore meditation as a positive treatment and its effects on cognition, results have demonstrated reductions in mind-wandering, leading to improvements in GRE reading comprehension scores ^[https://pubmed.ncbi.nlm.nih.gov/23538911/]. In other studies, researchers found that it had also been connected to increases in left hippocampal volume in the brain as well as working and recognition memory performance ^[https://www.sciencedirect.com/science/article/abs/pii/S016643281830322X]. However, many of these experiments were conducted over multiple week periods, not as a single exposure study.
+Previous studies have tested the impact of audio content with varying results. For example, when we explore meditation as a positive treatment and its effects on cognition, results have demonstrated reductions in mind-wandering, leading to improvements in GRE reading comprehension scores ^[https://pubmed.ncbi.nlm.nih.gov/23538911/]. In other studies, researchers found that it had also been connected to increases in left hippocampal volume in the brain as well as working and recognition memory performance ^[https://www.sciencedirect.com/science/article/abs/pii/S016643281830322X]. However, many of these experiments were conducted over multiple week periods, not as a single exposure study.
 
 While there is stronger evidence of positive effects on cognitive performance for meditative content, the results are less conclusive for more negative content, such as shocking news–i.e. announcements related to wars, school shootings, pandemics, et cetera. A Finland study conducted a `DID` analysis to understand the impact of school shootings on a national high school examination and found that test scores dropped by 4.3 percentage points among males only ^[https://www.sciencedirect.com/science/article/pii/S0176268016301768]. That said, there are many stressors that a group of males can undergo over the year period between examinations, and it may be impractical to conclude that one traumatic event can have such a long-term effect on only one sex. 
 
@@ -291,8 +291,9 @@ neg_did_plot <-did_plotdata_negative %>%
 
 pos_did_plot / neutral_did_plot / neg_did_plot
 ```
-## Covariates
 
+## Covariates
+Most of our survey participants fell within the age groups of 18-30 and 30-40. Between our covariates, highest education was the covariate with the most variance across all participants. We then investigated the covariate balance across treatment groups in the age group blocks for education level.
 ```{r}
 #count of respondents
 respondent_cnt <- setorder(d[ , count := .N, by = .(age =age.demographic, treatment)])
@@ -303,7 +304,8 @@ respondent_cnt
 ggplot(respondent_cnt, aes(fill=treatment, y=count, x=age.demographic, color=treatment)) + 
     labs ( title = "Respondent Count by Age Group and Treatment",
              x = "age group")+ 
-    geom_bar(position="dodge", alpha = 0.6, stat="identity")
+    geom_bar(position="dodge", alpha = 0.6, stat="identity")  
+   
 ```
 ```{r, echo = FALSE, fig.cap = "Age Group Distributions By Covariates"}
 p1 <- ggplot(d, aes(x=gender, fill = age.demographic)) +
@@ -320,7 +322,7 @@ p1 + p2 + p3 +    # Create grid of plots with title
   theme(plot.title = element_text(hjust = 0.5))
 
 ```
-Most of our survey participants fell within the age groups of 18-30 and 30-40. Between our covariates, highest education was the covariate with the most variance across all participants. We then investigated the covariate balance across treatment groups in the age group blocks for education level.
+
 
 ```{r, echo = FALSE, fig.cap ="Plots of Highest Education Distribution by Treatment and Age Group"}
 
