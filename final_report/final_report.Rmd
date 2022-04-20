@@ -308,23 +308,25 @@ ggplot(respondent_cnt, aes(fill=treatment, y=count, x=age.demographic, color=tre
              x = "age group")+ 
     geom_bar(position="dodge", alpha = 0.6, stat="identity")
 ```
-```{r, echo = FALSE, fig.cap = "Plots of Age Group Distributions By Covariates"}
+```{r, echo = FALSE, fig.cap = "Age Group Distributions By Covariates"}
 p1 <- ggplot(d, aes(x=gender, fill = age.demographic)) +
-  geom_bar(position="stack")
+  geom_bar(position="stack", show.legend = FALSE) + ggtitle("Gender")
 p1 <- p1 + theme(axis.text.x = element_text(angle = 25, hjust = 1))
 p2 <- ggplot(d, aes(x=highest.education, fill = age.demographic)) +
-  geom_bar(position="stack")
+  geom_bar(position="stack", show.legend = FALSE) + labs (x = "highest education")  + ggtitle("Highest Education")
 p2 <- p2 + theme(axis.text.x = element_text(angle = 30, hjust = 1))
 p3 <- ggplot(d, aes(x=english.native, fill = age.demographic)) +
-  geom_bar()
-grid.arrange(p1,p2,p3, ncol=2, top = "Covariate Distributions")
+  geom_bar(position="stack") + labs (x = "english native", fill = "age group") + ggtitle("English Native")
+
+p1 + p2 + p3
+
 ```
 Most of our survey participants fell within the age groups of 18-30 and 30-40. Between our covariates, highest education was the covariate with the most variance across all participants. We then investigated the covariate balance across treatment groups in the age group blocks for education level.
 
 ```{r, echo = FALSE, fig.cap ="Plots of Highest Education Distribution by Treatment and Age Group"}
 p_distribution_all <- ggplot(d, aes(x=treatment, fill=highest.education)) + geom_bar(position="stack") + ggtitle("Highest Education by Treatment and Age Group") +theme(plot.title = element_text(size=10)) + theme(axis.text.x = element_text(angle = 25, hjust = 1)) + theme(legend.key.size = unit(0.2, "cm")) + labs(fill="Highest Education")
 
-p_distribution_all + facet_grid(rows = vars(age.demographic))
+p_distribution_all + facet_grid(rows = vars(age.demographic), scales = "free_y")
 ```
 The plot above shows that across treatment and control groups with ample sample size, education is evenly distributed within our experiment.
 
