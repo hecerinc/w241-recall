@@ -384,13 +384,13 @@ p_attrition1 / p_attrition2 + plot_annotation(title = 'Attrition by age and trea
 
 The majority of participants completed the experiment fully, while there were several attritted participants in all treatment and control groups.
 
-```{r, fig.cap = "Attrition P-Value Table", warning=F}
+```{r, fig.cap = "Attrition P-Value Table", warning=F, results='asis'}
 # Creating subsets
 # Even more subsetting including our age group blocking
 data_att_age <- d[, .N, by=c('age.demographic', 'treatment', 'status')]
 setorder(data_att_age, cols = 'age.demographic')
 data_att_p <- data_att_age[status == 'complete', chisq.test(N, p=rep(1/4, 4)), by=age.demographic][, p.value, by=age.demographic] %>% unique()
-data_att_p
+print(xtable(data_att_p), comment = FALSE, type = 'latex')
 ```
 
 We can see that in all treatment groups and the control group, even with the attritted participants removed, there is an even distribution of participants within the age group blocks.
