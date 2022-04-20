@@ -405,12 +405,30 @@ knitr::include_graphics("flowchart.png")
 For the data we have collected, we want to fit the following models on each of the outcome variables:
 
 
-\begin{align}
-      \text{Completion time} &= \beta_0 + \beta_1 time + \beta_2 intervention + \beta_3 time*intervention + \epsilon \\
-      \text{Score} &= \beta_0 + \beta_1 time + \beta_2 intervention + \beta_3 time*intervention  + \epsilon \\
-      \text{Completion time} &= \beta_0 + \beta_1 time + \beta_2 intervention + \beta_3 time*intervention + \\ \beta_4 \text{highest education} + \beta_5 \text{english native language} + \epsilon \\
-      \text{Score} &= \beta_0 + \beta_1 time + \beta_2 intervention + \beta_3 time*intervention +  \beta_4 \text{highest education} + \beta_5 \text{english native language} + \epsilon \\
-\end{align}
+\begin{equation}
+    \begin{aligned}
+     \text{Score} = \beta_0 + \beta_1 time + \beta_2 intervention + \beta_3 time*intervention + \epsilon
+  \end{aligned}
+\end{equation}
+
+\begin{equation}
+    \begin{aligned}
+      \text{Score} = \beta_0 + \beta_1 time + \beta_2 intervention + \beta_3 time*intervention \\ 
+      +  \beta_4 \text{highest education} + \beta_5 \text{english native language} + \epsilon
+  \end{aligned}
+\end{equation}
+\begin{equation}
+    \begin{aligned}
+      \text{Completion time} = \beta_0 + \beta_1 time + \beta_2 intervention + \beta_3 time*intervention + \epsilon
+  \end{aligned}
+\end{equation}
+\begin{equation}
+    \begin{aligned}
+    \text{Completion time} = \beta_0 + \beta_1 time + \beta_2 intervention + \beta_3 time*intervention \\
+     + \beta_4 \text{highest education} + \beta_5 \text{english native language} + \epsilon
+  \end{aligned}
+\end{equation}
+
 
 Where we have added the **english as  native language** and **highest education degree** covariates to the longer models.
 
