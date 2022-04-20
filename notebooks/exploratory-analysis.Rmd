@@ -109,11 +109,12 @@ grid.arrange(p1,p2,p3, ncol=2, top = "Covariate Distributions")
 
 stargazer(d, type="text")
 
-options(na.action = "na.pass")  # so that we keep missing values in the data
-X <- model.matrix(~ age.demographic + gender + highest.education - 1, data = d)
-X.df <- data.frame(X)  # stargazer only does summary tables of data.frame objects
+#method to turn categorical variables into dummy variables for stargazer
+options(na.action = "na.pass")
+X <- model.matrix(~ age.demographic + gender + highest.education + english.native - 1, data = d)
+X.df <- data.frame(X)
 names(X) <- colnames(X)
-stargazer(X.df, type = "text")
+stargazer(X.df, type = "text", summary.stat = c("n", "mean", "sd"))
 
 summary(d[, c("age.demographic","gender","highest.education", "english.native")])
 
