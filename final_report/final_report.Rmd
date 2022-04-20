@@ -623,6 +623,14 @@ Finally, the amount of time that we allotted to participants to complete the mem
 
 # Conclusion
 
+Our experiment revealed that audio of varying emotional affect does not have a significant effect on cognitive function within a single exposure study. This remained to be true across each treatment type--i.e. positive, negative, and neutral. We also did not find that any of our covariates contributed meaningfully to our treatment outcome. Based on prior research, we anticipated that this could have been a result within our experiment as participants may require repeated exposure over a longer period of time (e.g. 4 weeks) to detect an effect.
+
+A future experiment should include a larger sample of participants as more insights could potentially be gleaned from the covariates on the treatment outcome. While the pre-experiment power analysis did not accurately estimate the potential treatment effect, this experiment provided a baseline to calculate an appropriate sample size with adequate power for future iterations. 
+
+We also acknowledge that the addition of a time constraint may have limited any induced effect from the treatments. Eliminating the time constraint on the memory recognition task will remove any potential for an underestimated treatment effect as well as open up the analysis to better understand the impact of time on the treatment outcome. 
+
+Overall, further analysis and experimentation is required to understand the true impact of audio on cognitive function, but for now, we can conclude that these results do not support any claims that suggest that audio may influence cognitive performance (e.g. memory recognition). 
+
 \newpage
 
 # References
