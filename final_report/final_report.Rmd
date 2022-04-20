@@ -613,7 +613,7 @@ Additionally, the different treatments may have been more engaging than others. 
 
 We also acknowledge participants could have "gamed" the experiment by selecting every single word in the recall list. The survey did not tell the participant if their selection was correct or not, which we intended to disincentivize this behavior. Our scoring methodology did not penalize incorrect answers, so this could have had unintended consequences in our analysis. However, when we reviewed the data and included a penalty for incorrect answers, there were very few instances where the penalized score differed from the simple count score. 
 
-In our survey design we also made one mistake, creating overlapping age groups (e.g. 30-40 and 40-50). ==TODO: revise== So for participants aged 40 may have been confused and declined to participate, or chose one age group inconsistently (i.e. some 40 year olds chose the younger group and others chose the older). 
+In our survey design we also made one mistake, creating overlapping age groups (e.g. 30-40 and 40-50). This would have impacted a total of 
 
 Finally, the amount of time that we allotted to participants to complete the memory recognition task was likely problematic for our models where the task completion time was the outcome variable. Some participants reported that thirty seconds wasn't a sufficient amount of time to complete the task, and if the majority of participants felt this way, then this could have minimized a treatment effect within our results. Extending the task completion time in a future iteration would remove this limitation. 
 
