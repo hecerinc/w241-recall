@@ -318,7 +318,9 @@ p2 <- p2 + theme(axis.text.x = element_text(angle = 30, hjust = 1))
 p3 <- ggplot(d, aes(x=english.native, fill = age.demographic)) +
   geom_bar(position="stack") + labs (x = "english native", fill = "age group") + ggtitle("English Native")
 
-p1 + p2 + p3
+p1 + p2 + p3 +    # Create grid of plots with title
+  plot_annotation(title = "Age Group Distributions by Covariates") & 
+  theme(plot.title = element_text(hjust = 0.5))
 
 ```
 Most of our survey participants fell within the age groups of 18-30 and 30-40. Between our covariates, highest education was the covariate with the most variance across all participants. We then investigated the covariate balance across treatment groups in the age group blocks for education level.
