@@ -115,8 +115,6 @@ All treatments contained an audio file, which was around five minutes in length.
 knitr::include_graphics("data_def.png")
 ```
 
-
-
 ## Outcome Variables
 
 Cognitive outcomes in this experiment were primarily measured by the number of words correctly recognized. While we also measured the length of time users took to complete this memory task, we did not expect many users to finish before the allotted 30 second time period.   
@@ -239,12 +237,12 @@ pos_did_plot <- did_plotdata_pos %>%
              color = "black", size=1.1) + 
   scale_color_brewer(palette = "Accent") +
   scale_y_continuous(limits = c(9, 16)) +
-  labs(x="", y="score (mean)", subtitle = "DID plot: Positive Treatment vs Control") +
+  labs(x="", y="score (mean)", subtitle = "Difference-in-Differences (DID) plot: Positive Treatment vs Control") +
   annotate(
     "text",
     x = "post-treatment",
-    y = 12.2,
-    label = "{Difference-in-Differences}",
+    y = 13.5,
+    label = "{DID}",
     angle = 90,
     size = 2
   )
@@ -259,13 +257,13 @@ neutral_did_plot <- did_plotdata_neutral %>%
   geom_vline(xintercept = "intervention", linetype="dotted", 
              color = "black", size=1.1) + 
   scale_color_brewer(palette = "Accent") +
-  scale_y_continuous(limits = c(9, 12)) +
-  labs(x="", y="score (mean)", subtitle = "DID plot: Neutral Treatment vs Control") +
+  scale_y_continuous(limits = c(9, 15)) +
+  labs(x="", y="score (mean)", subtitle = "Difference-in-Differences (DID) plot: Neutral Treatment vs Control") +
   annotate(
     "text",
     x = "post-treatment",
     y = 10.5,
-    label = "{Difference-in-Differences}",
+    label = "{DID",
     angle = 90,
     size = 2
   )
@@ -281,19 +279,18 @@ neg_did_plot <-did_plotdata_negative %>%
              color = "black", size=1.1) + 
   scale_color_brewer(palette = "Accent") +
   scale_y_continuous(limits = c(7, 13)) +
-  labs(x="", y="score (mean)", subtitle = "DID plot: Negative Treatment vs Control") +
+  labs(x="", y="score (mean)", subtitle = "Difference-in-Differences (DID) plot: Negative Treatment vs Control") +
   annotate(
     "text",
     x = "post-treatment",
     y = 10,
-    label = "{Difference-in-Differences}",
+    label = "{DID}",
     angle = 90,
     size = 2
   )
 
 pos_did_plot / neutral_did_plot / neg_did_plot
 ```
-
 ## Covariates
 
 ```{r}
@@ -342,12 +339,7 @@ power.t.test(n= NULL, delta = 1, sd = 1, sig.level = 0.05, power = 0.8, type = "
 
 Prior to the experiment, we estimated a DID effect of 1 additional word correctly or incorrectly guessed between treatment and control with a standard deviation of 1, aiming for a power of 0.8. This would require at least 14 subjects in each treatment and control group to achieve.
 
-
-\newpage
 # Data Analysis
-
-* VIZ: DID line plot
-
 
 ## Attrition
 
