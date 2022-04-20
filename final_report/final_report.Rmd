@@ -8,10 +8,14 @@ output:
     toc: true
     number_sections: yes
     fig_caption: yes
+csl: apa.csl
 nocite: |
  @*
 ---
 
+```{r knitr options, include=F}
+knitr::opts_chunk$set(dpi=300, tidy.opts=list(width.cutoff=40), tidy=T, echo=F, warning=F)
+```
 
 ```{r package loads, warning=FALSE, message=FALSE, include=FALSE}
 library(data.table)
@@ -27,9 +31,6 @@ library(tibble)
 library(dplyr)
 ```
 
-```{r knitr options, include=F}
-knitr::opts_chunk$set(dpi=300, tidy.opts=list(width.cutoff=40), tidy=T, echo=F)
-```
 
 
 ```{r data clean up, include = FALSE}
@@ -44,7 +45,10 @@ d[q25.score == 0, ]
 d[is.na(posttask.time),]
 # These two above are *not* the same, I'm gonna keep the ones that are finished (2/7). The other 5/7 have no time spent in Q25 so we're good removing those.
 d <- d[!is.na(posttask.time),]
+# Let's set the bachelor's degree to be the omitted category for the models
+d$highest.education <- relevel(d$highest.education, ref="Bachelor's degree")
 ```
+
 
 \newpage
 
@@ -217,7 +221,7 @@ did_plotdata_negative <- bind_rows(scores_negative,
                           )
 ```
 
-```{r DID plots}
+```{r DID plots, fig.height=10, fig.caption="Difference in differences plots"}
 # pos DID plot
 
 pos_did_plot <- did_plotdata_pos %>%
@@ -262,7 +266,7 @@ neutral_did_plot <- did_plotdata_neutral %>%
 
 # neg DID plot
 
-neg_did_plot <-did_plotdata_negative %>%
+neg_did_plot <- did_plotdata_negative %>%
   mutate(label = if_else(observation == "post-treatment", as.character(treatment), NA_character_)) %>%
   ggplot(aes(x=observation,y=score, group=treatment)) +
   scale_x_discrete(limits = c("pre-treatment", "intervention", "post-treatment"))+
@@ -271,7 +275,7 @@ neg_did_plot <-did_plotdata_negative %>%
              color = "black", size=1.1) +
   scale_color_brewer(palette = "Accent") +
   scale_y_continuous(limits = c(7, 13)) +
-  labs(x="", y="score (mean)", subtitle = "Difference-in-Differences (DID) plot: Negative treatment vs Control") +
+  labs(x="", y="Score (mean)", subtitle = "Difference-in-Differences (DID) plot: Negative treatment vs Control") +
   annotate(
     "text",
     x = "post-treatment",
@@ -281,14 +285,14 @@ neg_did_plot <-did_plotdata_negative %>%
     size = 2
   )
 
-pos_did_plot / neutral_did_plot / neg_did_plot
+pos_did_plot / neutral_did_plot / neg_did_plot 
 ```
 
 ## Covariates
 
 Most of our survey participants fell within the age groups of 18-30 and 30-40. Between our covariates, highest education was the covariate with the most variance across all participants. We then investigated the covariate balance across treatment groups in the age group blocks for education level.
 
-```{r}
+```{r, fig.cap="Respondent count by age group and treatment"}
 # count of respondents
 respondent_cnt <- setorder(d[ , count := .N, by = .(age =age.demographic, treatment)])
 
@@ -321,7 +325,6 @@ p1 + p2 + p3 +    # Create grid of plots with title
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-Most of our survey participants fell within the age groups of 18-30 and 30-40. Between our covariates, highest education was the covariate with the most variance across all participants. We then investigated the covariate balance across treatment groups in the age group blocks for education level.
 
 ```{r, fig.cap ="Plots of Highest Education Distribution by Treatment and Age Group"}
 p_distribution_all <- ggplot(d, aes(x=treatment, fill=highest.education)) +
@@ -364,10 +367,10 @@ dt <- data.frame( n = c("Missing Data", "Missing Data", "Attrition","Complete Da
 
 colnames(dt) <- c("Data definitions", "Completed first memory task", "Completed second memory task")
 
-print(xtable(dt, caption = 'Data Definitions for Completion and Attrition'), comment = FALSE, type = 'latex')
+print(xtable(dt, caption = 'Data definitions for Completion and Attrition'), comment = FALSE, type = 'latex')
 ```
 
-```{r Attrition plot,  fig.cap = "Plot of Attrition by Age and Treatment"}
+```{r Attritionplot,  fig.cap = "Plot of Attrition by Age and Treatment"}
 # Creating a status column in the original data set based on the previous truth table
 d[, status := 'complete']
 d[(q12.score != 0 & q25.score == 0 & finished == 0) | (finished == 1 & q12.score != 0 & q25.score == 0), status := 'attritted']
@@ -391,6 +394,10 @@ data_att_p
 ```
 
 We can see that in all treatment groups and the control group, even with the attritted participants removed, there is an even distribution of participants within the age group blocks.
+
+```{r, results='asis'}
+print(xtable(d[, table(highest.education, treatment)], caption = 'Assignment by treatment and highest education level', label='tab:assignmentxtreatment'), comment = FALSE, type = 'latex')
+```
 
 
 ```{r flowchart, echo=FALSE, fig.cap="Participant Random Assignment Flow Chart", out.width = '50%', fig.align='center'}
@@ -430,7 +437,7 @@ For the data we have collected, we want to fit the following models on each of t
 \end{equation}
 
 
-Where we have added the **english as  native language** and **highest education degree** covariates to the longer models.
+For each of the outcome variables, we have a shorter and longer model, where we have added the **English as  native language** and **highest education degree** covariates to the longer models, and the shorter models include only the differences in differences estimator ($\text{time}*\text{intervention}$). In this setup, $\text{time}$ is an indicator variable indicating the pre-treatment and post-treatment time periods, and $\text{intervention}$ is an indicator variable for whether subjects were assigned to receive a treatment or not.
 
 # Results
 
@@ -459,7 +466,8 @@ m1.3$rse <- sqrt(diag(vcovHC(m1.3)))
 stargazer(m1.0, m1.1, m1.2, m1.3, type='latex',
 		  dep.var.labels = 'Score (correct words remembered)',
 		  column.labels = c('Any treatment', 'Positive', 'Negative', 'Neutral'),
-		  title="Table 1. Score (correct words remembered) DID estimation",
+		  label = "tab:regression1",
+		  title="Score (correct words remembered) DID estimation",
 		  se=list(m1.0$rse, m1.1$rse, m1.2$rse, m1.3$rse),
 		  omit="^(any_treatment|time|treatmentpositive|treatmentnegative|treatmentneutral)$",
 		  covariate.labels=c(
@@ -471,7 +479,8 @@ stargazer(m1.0, m1.1, m1.2, m1.3, type='latex',
 		  header=F
 		  )
 ```
-We have also fitted a model to compare people who were assigned _any treatment_ (i.e. an audio clip vs. the control which was white noise).
+
+We have also fitted a model to compare people who were assigned _any treatment_ (i.e. an audio clip vs. the control which was white noise). As can be seen from Table \@ref(tab:regression1), none of the individual treatments (positive, negative, neutral) had a statistically significant effect on recall ability measured by score. Moreover, accounting for receiving any treatment at all did not show a statistically significant effect either, giving an estimate of .392 (2.148).
 
 ### Covariated model
 
@@ -486,11 +495,12 @@ m3.3$rse <- sqrt(diag(vcovHC(m3.3)))
 stargazer(m3.1, m3.2, m3.3, type='latex',
 		  dep.var.labels = 'Score (correct words remembered)',
 		  column.labels = c('Positive', 'Negative', 'Neutral'),
-		  title="Table 2. Score (correct words remembered) DID estimation (covariated model)",
+		  label = "tab:regression2",
+		  title="Score (correct words remembered) DID estimation (covariated model)",
 		  se=list(m3.1$rse, m3.2$rse, m3.3$rse),
 		  omit="^(time|treatmentpositive|treatmentnegative|treatmentneutral)$|Other",
 		  covariate.labels=c(
-		  	'Bachelor\'s degree',
+		  	'Associate\'s degree',
 		  	'High school diploma',
 		  	'Master\'s Degree',
 		  	'PhD/MD/JD',
@@ -504,11 +514,12 @@ stargazer(m3.1, m3.2, m3.3, type='latex',
 ```
 
 
+As can be observed from the model results, none of the difference-in-differences estimators produced a statistically significant effect. 
+In practical terms, this suggests that the treatment of the audio clips did not have any effect on the recall ability of the participants. It's interesting to note that we cannot see an effect on either the individual treatments (negative, positive, neutral), nor the application of any treatment. 
 
-As we can see from the model results, none of the difference-in-differences estimators produced a statistically significant effect.
-In practical terms, this suggests that the treatment of the audio clips did not have any effect on the recall ability of the participants. It's interesting to note that we can't see an effect on either the individual treatments (negative, positive, neutral), nor the application of any treatment.
+Adding the education and English as a native language covariate also does not improve the estimates (we disregard the associate degree's statistically significant coefficient for the negative model as noise, as there were no participants assigned to that intersection (see Table \@ref(tab:assignmentxtreatment))), and in fact, paradoxically decreases the precision of the estimates. ==TODO: ADD REASONING AS TO WHY==
 
-Though the underlying literature suggests that there should be an effect from the meditation one, according to ==INSERT REFERNCE HERE==, our analysis of the 5-minute intervention does not support this data. We do not make a statement either refuting or supporting the previous literature, however. In this case, given the relatively short duration of the treatment, we are probably unable to detect a treatment with the given dosage. Further replications of the experiment with longer doses of the treatments are recommended to be able to definitively assert one or another conclusion.
+Though the underlying literature suggests that there should be an effect from the meditation one, according to [@Mrazek], our analysis of the 5-minute intervention does not support this data. We do not make a statement either refuting or supporting the previous literature, however. In this case, given the relatively short duration of the treatment, we are probably unable to detect a treatment with the given dosage. Further replications of the experiment with longer doses of the treatments are recommended to be able to definitively assert one or another conclusion.
 
 
 ## Completion time outcome
@@ -519,6 +530,7 @@ ddx$time <- ifelse(ddx$time == 'pretask.time', 0, 1)
 ddx <- data.table(ddx)
 ```
 
+We have also fitted the completion time specifications based on the same regressors, with similar results.
 
 ### Short time model
 
@@ -532,8 +544,9 @@ m50.3$rse <- sqrt(diag(vcovHC(m50.3)))
 stargazer(m50.1, m50.2, m50.3,
 		  type='latex',
 		  dep.var.labels = 'Completion time (secs)',
+		  label = 'tab:regression3',
 		  column.labels = c('Positive', 'Negative', 'Neutral'),
-		  title="Table 3. Completion time covariated model",
+		  title="Completion time (covariated model)",
 		  se=list(m50.1$rse, m50.2$rse, m50.3$rse),
 		  omit="^(time|treatmentpositive|treatmentnegative|treatmentneutral)$",
 		  covariate.labels=c(
@@ -545,15 +558,16 @@ stargazer(m50.1, m50.2, m50.3,
   )
 ```
 
-Similarly for the time model, we can see there is no significant effect on the completion time. In fact, taking a look at the completion time distribution for our survey participants, we find that most participants (X % ADD PERCENTAGE HERE) utilized the full 30 seconds allotted to the time completion.
+Table \@ref(tab:regression3) shows no significant effect on the completion time for any of the difference-in-differences estimators. In fact, taking a look at the completion time distribution for our survey participants (Figure \@ref(fig:CompletionTimeHistogram)), we find that most participants (`r mean(d$posttask.time >= 30)*100`%) utilized the full 30 seconds allotted to the memory task.
 
-```{r}
-dd[, hist( posttask.time)]
+```{r CompletionTimeHistogram, fig.cap='Completion time distribution for post-treatment memory task', message=F}
+ggplot(d, aes(x=posttask.time)) +
+	geom_histogram() +
+	theme_classic() +
+	labs(title='Completion time for post-treatment recall memory task', x='Time (sec)', y='Count')
 ```
 
-
-- Talk about why the time limit was probably a design flaw in the experiment
-
+This distribution of time is interesting because it suggests in retrospect that this was an area of opportunity for our experimental design. Having most people use the full 30 seconds suggests that given the number of words (50) from which they had to choose (30), this might not have been a long enough time limit to complete the full task, leading to a potential underestimation of the treatment effect. Additionally, a similar design without the time limitation could leverage the full unbounded completion time as an additional outcome variable that serves as a proxy to answer the question "are people who were assigned the positive intervention more likely to spend more time completing the full task?" (i.e. endurance to completion).
 
 ### Covariated time model
 
@@ -570,10 +584,10 @@ stargazer(m53.1, m53.2, m53.3,
 		  se=list(m53.1$rse, m53.2$rse, m53.3$rse),
 		  dep.var.labels = 'Completion time (secs)',
 		  column.labels = c('Positive', 'Negative', 'Neutral'),
-			title="Table 4. Completion time covariated model",
+			title="Completion time covariated model",
 		  omit="^(time|treatmentpositive|treatmentnegative|treatmentneutral)$|Other",
 		  covariate.labels=c(
-		  	'Bachelor\'s degree',
+		  	'Associate\'s degree',
 		  	'High school diploma',
 		  	'Master\'s Degree',
 		  	'PhD/MD/JD',
@@ -587,9 +601,10 @@ stargazer(m53.1, m53.2, m53.3,
 
 ```
 
-Adding each of the
+Adding each of the covariates once again did not improve the precision of the estimates, however of note is that the degrees coefficients did have a statistically significant (at $\alpha = 0.05$) improvement for High school diploma, Master's degree, and PhD/MD/JD over the omitted category (Bachelor's degree).
 
-==UNDERPOWERDNESS==
+Given the estimates of the effects that were produced from this initial exploration, it's reasonable to assume that our initial estimations of the effect of the treatment (in its current form) were overestimated. This implies that our experiment, with our current sample size is probably underpowered for the actual effect that might exist (if any) at a dosage of 5 minutes of any of the treatment. Increasing the dosage might increase the effect size, which would allow us to more easily detect it, however increasing the sample size would considerably improve the reliability of our current estimates.
+
 
 ## Limitations
 
