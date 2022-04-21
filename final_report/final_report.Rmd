@@ -59,7 +59,7 @@ In this paper, we explore the impact of four audio stimuli of varying emotional 
 
 We found that there was no statistically significant effect of negative stimuli on cognitive function. We acknowledge as well that the negative stimuli used in this experiment may not have been strong enough to create a treatment effect and that the treatment may have needed to be repeated over time to detect a significant effect.
 
-## Prior Research
+## Prior research
 
 Previous studies have tested the impact of audio content with varying results. For example, when we explore meditation as a positive treatment and its effects on cognition, results have demonstrated reductions in mind-wandering, leading to improvements in GRE reading comprehension scores ^[https://pubmed.ncbi.nlm.nih.gov/23538911/]. In other studies, researchers found that it had also been connected to increases in left hippocampal volume in the brain as well as working and recognition memory performance ^[https://www.sciencedirect.com/science/article/abs/pii/S016643281830322X]. However, many of these experiments were conducted over multiple week periods, not as a single exposure study.
 
@@ -115,6 +115,8 @@ knitr::include_graphics("data_def.png")
 ## Outcome Variables
 
 Cognitive outcomes in this experiment were primarily measured by the number of words correctly recognized. While we also measured the length of time users took to complete this memory task, we did not expect many users to finish before the allotted 30 second time period.
+
+\newpage 
 
 ## ROXO methodology
 
@@ -222,7 +224,7 @@ did_plotdata_negative <- bind_rows(scores_negative,
                           )
 ```
 
-```{r DID plots, fig.height=10, fig.caption="Difference in differences plots"}
+```{r DID plots, fig.height=8, fig.caption="Difference in differences plots"}
 # pos DID plot
 
 pos_did_plot <- did_plotdata_pos %>%
@@ -293,17 +295,17 @@ pos_did_plot / neutral_did_plot / neg_did_plot
 
 Most of our survey participants fell within the age groups of 18-30 and 30-40. Between our covariates, highest education was the covariate with the most variance across all participants. We then investigated the covariate balance across treatment groups in the age group blocks for education level.
 
-```{r, fig.cap="Respondent count by age group and treatment"}
+```{r, fig.cap="Respondent count by age group and treatment", fig.height=3}
 # count of respondents
 respondent_cnt <- setorder(d[ , count := .N, by = .(age =age.demographic, treatment)])
 
 # plot grouped bar charts
 ggplot(respondent_cnt, aes(fill=treatment, y=count, x=age.demographic, color=treatment)) +
-    labs(title = "Respondent Count by Age Group and Treatment", x = "age group") +
+    labs(title = "Respondent Count by Age Group and Treatment", x = "Age group", y = "Count") +
     geom_bar(position="dodge", alpha = 0.6, stat="identity")
 ```
 
-```{r, fig.cap = "Age Group Distributions By Covariates"}
+```{r, fig.cap = "Age Group Distributions By Covariates", fig.height=4}
 p1 <- ggplot(d, aes(x=gender, fill = age.demographic)) +
 	geom_bar(position="stack", show.legend = FALSE) +
 	ggtitle("Gender") +
@@ -311,13 +313,13 @@ p1 <- ggplot(d, aes(x=gender, fill = age.demographic)) +
 
 p2 <- ggplot(d, aes(x=highest.education, fill = age.demographic)) +
 	geom_bar(position="stack", show.legend = FALSE) +
-	labs(x = "highest education") +
+	labs(x = "Highest education") +
 	ggtitle("Highest Education") +
 	theme(axis.text.x = element_text(angle = 30, hjust = 1), plot.title = element_text(size=10))
 
 p3 <- ggplot(d, aes(x=english.native, fill = age.demographic)) +
 	geom_bar(position="stack") +
-	labs(x = "english native", fill = "age group") +
+	labs(x = "English native", fill = "Age group") +
 	ggtitle("English Native") +
 	theme(plot.title = element_text(size=10))
 
@@ -336,7 +338,7 @@ p_distribution_all <- ggplot(d, aes(x=treatment, fill=highest.education)) +
 		axis.text.x = element_text(angle = 25, hjust = 1),
 		legend.key.size = unit(0.2, "cm")
 	) +
-	labs(fill="Highest Education")
+	labs(fill="Highest Education", y = "Count", x = "Treatment")
 
 p_distribution_all + facet_grid(rows = vars(age.demographic), scales = "free_y")
 ```
@@ -350,7 +352,6 @@ anova(co.model1, co.model2, test='F')
 ```
 Performing an F-test on the covariates shows that there is no predictability in treatment assignment from the covariates (p-value of .3958).
 
-\newpage
 
 # Power Analysis
 
@@ -378,15 +379,15 @@ colnames(dt) <- c("Data definitions", "Completed first memory task", "Completed 
 print(xtable(dt, caption = 'Data definitions for Completion and Attrition'), comment = FALSE, type = 'latex')
 ```
 
-```{r Attritionplot,  fig.cap = "Plot of Attrition by Age and Treatment"}
+```{r Attritionplot,  fig.cap = "Plot of Attrition by Age and Treatment", fig.height=4}
 # Creating a status column in the original data set based on the previous truth table
 d[, status := 'complete']
 d[(q12.score != 0 & q25.score == 0 & finished == 0) | (finished == 1 & q12.score != 0 & q25.score == 0), status := 'attritted']
 d[(q12.score == 0 & q25.score == 0) | (q12.score == 0 & q25.score != 0), status := 'missing_data']
 
 # Showing attrition visually
-p_attrition1 <- ggplot(d, aes(x = age.demographic, fill = status)) + geom_bar(position = "dodge") + labs(x = "age group")
-p_attrition2 <- ggplot(d, aes(x = treatment,       fill = status)) + geom_bar(position = "dodge")
+p_attrition1 <- ggplot(d, aes(x = age.demographic, fill = status)) + geom_bar(position = "dodge") + labs(x = "Age group", y="Count")
+p_attrition2 <- ggplot(d, aes(x = treatment,       fill = status)) + geom_bar(position = "dodge") + labs(x = "Treatment", y="Count")
 p_attrition1 / p_attrition2 + plot_annotation(title = 'Attrition by age and treatment group')
 ```
 
@@ -576,7 +577,7 @@ stargazer(m50.1, m50.2, m50.3,
 
 Table \@ref(tab:regression3) shows no significant effect on the completion time for any of the difference-in-differences estimators. In fact, taking a look at the completion time distribution for our survey participants (Figure \@ref(fig:CompletionTimeHistogram)), we find that most participants (`r mean(d$posttask.time >= 30)*100`%) utilized the full 30 seconds allotted to the memory task.
 
-```{r CompletionTimeHistogram, fig.cap='Completion time distribution for post-treatment memory task', message=F}
+```{r CompletionTimeHistogram, fig.cap='Completion time distribution for post-treatment memory task', message=F, fig.height=2}
 ggplot(d, aes(x=posttask.time)) +
 	geom_histogram() +
 	theme_classic() +
@@ -639,7 +640,7 @@ Finally, the amount of time that we allotted to participants to complete the mem
 
 # Conclusion
 
-Our experiment revealed that audio of varying emotional affect does not have a significant effect on cognitive function within a single exposure study. This remained to be true across each treatment type--i.e. positive, negative, and neutral. We also did not find that any of our covariates contributed meaningfully to our treatment outcome. Based on prior research, we anticipated that this could have been a result within our experiment as participants may require repeated exposure over a longer period of time (e.g. 4 weeks) to detect an effect.
+Our experiment revealed that audio of varying emotional affect does not have a significant effect on cognitive function within a single exposure study. This remained to be true across each treatment type — i.e. positive, negative, and neutral. We also did not find that any of our covariates contributed meaningfully to our treatment outcome. Based on prior research, we anticipated that this could have been a result within our experiment as participants may require repeated exposure over a longer period of time (e.g. 4 weeks) to detect an effect.
 
 A future experiment should include a larger sample of participants as more insights could potentially be gleaned from the covariates on the treatment outcome. While the pre-experiment power analysis did not accurately estimate the potential treatment effect, this experiment provided a baseline to calculate an appropriate sample size with adequate power for future iterations. 
 
